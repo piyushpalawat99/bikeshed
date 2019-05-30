@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 from ..messages import printColor
 
@@ -34,9 +34,9 @@ def printjsonobject(x, indent, level):
     x = getjson(x)
     ret = ""
     maxKeyLength = 0
-    for k in x.keys():
+    for k in list(x.keys()):
         maxKeyLength = max(maxKeyLength, len(k))
-    for k,v in x.items():
+    for k,v in list(x.items()):
         ret += "\n" + (indent * level) + printColor((k + ": ").ljust(maxKeyLength + 2), "cyan") + printjson(v, indent, level + 1)
     return ret
 
@@ -66,11 +66,11 @@ def printjsonsimplearray(x, indent, level):
 def printjsonprimitive(x):
     x = getjson(x)
     if isinstance(x, int):
-        return unicode(x)
-    if isinstance(x, basestring):
+        return str(x)
+    if isinstance(x, str):
         return x
     if isinstance(x, bool):
-        return unicode(x)
+        return str(x)
     if x is None:
         return "null"
     raise Exception(x)

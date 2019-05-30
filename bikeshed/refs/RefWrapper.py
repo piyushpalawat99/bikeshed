@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import copy
 
@@ -25,7 +25,7 @@ class RefWrapper(object):
         else:
             refKey = name
         val = self._ref[refKey]
-        if isinstance(val, basestring):
+        if isinstance(val, str):
             val = decode(val.strip())
         elif isinstance(val, list):
             val = [decode(x.strip()) for x in val]
@@ -38,5 +38,5 @@ class RefWrapper(object):
 
 def decode(s):
     if isinstance(s, str):
-        return unicode(s, encoding="utf-8")
+        return str(s, encoding="utf-8")
     return s

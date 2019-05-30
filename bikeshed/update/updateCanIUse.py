@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import io
 import json
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from collections import OrderedDict
 from contextlib import closing
 
@@ -13,14 +13,14 @@ from ..messages import *
 def update(path, dryRun=False):
     say("Downloading Can I Use data...")
     try:
-        with closing(urllib2.urlopen("https://raw.githubusercontent.com/Fyrd/caniuse/master/fulldata-json/data-2.0.json")) as fh:
+        with closing(urllib.request.urlopen("https://raw.githubusercontent.com/Fyrd/caniuse/master/fulldata-json/data-2.0.json")) as fh:
             jsonString = fh.read()
     except Exception as e:
         die("Couldn't download the Can I Use data.\n{0}", e)
         return
 
     try:
-        data = json.loads(unicode(jsonString), encoding="utf-8", object_pairs_hook=OrderedDict)
+        data = json.loads(str(jsonString), encoding="utf-8", object_pairs_hook=OrderedDict)
     except Exception as e:
         die("The Can I Use data wasn't valid JSON for some reason. Try downloading again?\n{0}", e)
         return
@@ -30,7 +30,7 @@ def update(path, dryRun=False):
     # Trim agent data to minimum required - mapping codename to full name
     codeNames = {}
     agentData = {}
-    for codename,agent in data["agents"].items():
+    for codename,agent in list(data["agents"].items()):
         codeNames[codename] = agent["browser"]
         agentData[agent["browser"]] = codename
     basicData["agents"] = agentData
@@ -54,13 +54,13 @@ def update(path, dryRun=False):
             v,_,_ = v.partition("-")
         return v
     featureData = {}
-    for featureName,feature in data["data"].items():
+    for featureName,feature in list(data["data"].items()):
         notes = feature["notes"]
         url = feature["spec"]
         basicData["features"][featureName] = url
         browserData = {}
-        for browser,versions in feature["stats"].items():
-            descendingVersions = list(reversed(versions.items()))
+        for browser,versions in list(feature["stats"].items()):
+            descendingVersions = list(reversed(list(versions.items())))
             mostRecent = descendingVersions[0]
             version = simplifyVersion(mostRecent[0])
             status = simplifyStatus(mostRecent[1], featureName, browser, version)
@@ -91,13 +91,13 @@ def update(path, dryRun=False):
             p = os.path.join(path, "caniuse", "data.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as fh:
-                fh.write(unicode(json.dumps(basicData, indent=1, ensure_ascii=False, sort_keys=True)))
+                fh.write(str(json.dumps(basicData, indent=1, ensure_ascii=False, sort_keys=True)))
 
-            for featureName, feature in featureData.items():
+            for featureName, feature in list(featureData.items()):
                 p = os.path.join(path, "caniuse", "feature-{0}.json".format(featureName))
                 writtenPaths.add(p)
                 with io.open(p, 'w', encoding='utf-8') as fh:
-                    fh.write(unicode(json.dumps(feature, indent=1, ensure_ascii=False, sort_keys=True)))
+                    fh.write(str(json.dumps(feature, indent=1, ensure_ascii=False, sort_keys=True)))
         except Exception as e:
             die("Couldn't save Can I Use database to disk.\n{0}", e)
             return

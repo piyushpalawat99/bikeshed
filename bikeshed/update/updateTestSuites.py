@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import io
 import json
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from contextlib import closing
 
 from ..apiclient.apiclient import apiclient
@@ -28,7 +28,7 @@ def update(path, dryRun=False):
         return
 
     testSuites = dict()
-    for rawTestSuite in rawTestSuiteData.values():
+    for rawTestSuite in list(rawTestSuiteData.values()):
         if "specs" not in rawTestSuite:
             # Looks like test-suites might not have spec data at first.
             # Useless, so just drop them.
@@ -46,7 +46,7 @@ def update(path, dryRun=False):
     if not dryRun:
         try:
             with io.open(os.path.join(path, "test-suites.json"), 'w', encoding="utf-8") as f:
-                f.write(unicode(json.dumps(testSuites, ensure_ascii=False, indent=2, sort_keys=True)))
+                f.write(str(json.dumps(testSuites, ensure_ascii=False, indent=2, sort_keys=True)))
         except Exception as e:
             die("Couldn't save test-suite database to disk.\n{0}", e)
     say("Success!")

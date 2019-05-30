@@ -25,7 +25,7 @@ else:
 
 # assertRaisesRegex is missing prior to Python 3.2
 if sys.version_info < (3, 2):
-    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp
+    unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegex
 
 try:
     from test import support
@@ -463,7 +463,7 @@ class _BasePurePathTest(object):
             self._check_str(os.fspath(p), ('a/b',))
 
     def test_equivalences(self):
-        for k, tuples in self.equivalences.items():
+        for k, tuples in list(self.equivalences.items()):
             canon = k.replace('/', self.sep)
             posix = k.replace(self.sep, '/')
             if canon != posix:
@@ -697,7 +697,7 @@ class _BasePurePathTest(object):
     # note: this is a new test not part of upstream
     # test that unicode works on Python 2
     def test_unicode(self):
-        self.cls(six.unichr(0x0100))
+        self.cls(six.chr(0x0100))
 
 
 class PurePosixPathTest(_BasePurePathTest, unittest.TestCase):
@@ -1476,7 +1476,7 @@ class _BasePathTest(object):
 
     def test_read_write_text(self):
         p = self.cls(BASE)
-        (p / 'fileA').write_text(six.u('\u00e4bcdefg'), encoding='latin-1')
+        (p / 'fileA').write_text(six.u('\\u00e4bcdefg'), encoding='latin-1')
         self.assertEqual((p / 'fileA').read_text(
             encoding='utf-8', errors='ignore'), six.u('bcdefg'))
         # check that trying to write bytes does not truncate the file
@@ -1484,7 +1484,7 @@ class _BasePathTest(object):
             (p / 'fileA').write_text(b'somebytes')
         self.assertTrue(str(cm.exception).startswith('data must be'))
         self.assertEqual((p / 'fileA').read_text(encoding='latin-1'),
-                         six.u('\u00e4bcdefg'))
+                         six.u('\\u00e4bcdefg'))
 
     def test_iterdir(self):
         P = self.cls
@@ -1565,9 +1565,9 @@ class _BasePathTest(object):
         # ".." is not special in globs
         P = self.cls
         p = P(BASE)
-        self.assertEqual(set(p.glob("..")), set([P(BASE, "..")]))
+        self.assertEqual(set(p.glob("..")), {P(BASE, "..")})
         self.assertEqual(set(p.glob("dirA/../file*")),
-                         set([P(BASE, "dirA/../fileA")]))
+                         {P(BASE, "dirA/../fileA")})
         self.assertEqual(set(p.glob("../xyzzy")), set())
 
     def _check_resolve(self, p, expected, strict=True):
@@ -2095,12 +2095,12 @@ class PosixPathTest(_BasePathTest, unittest.TestCase):
     def _check_symlink_loop(self, *args):
         path = self.cls(*args)
         with self.assertRaises(RuntimeError):
-            print(path.resolve(strict=True))
+            print((path.resolve(strict=True)))
 
     def _check_symlink_loop_nonstrict(self, *args):
         path = self.cls(*args)
         with self.assertRaises(RuntimeError):
-            print(path.resolve(strict=False))
+            print((path.resolve(strict=False)))
 
     def test_open_mode(self):
         old_mask = os.umask(0)
@@ -2218,13 +2218,13 @@ class WindowsPathTest(_BasePathTest, unittest.TestCase):
     def test_glob(self):
         P = self.cls
         p = P(BASE)
-        self.assertEqual(set(p.glob("FILEa")), set([P(BASE, "fileA")]))
+        self.assertEqual(set(p.glob("FILEa")), {P(BASE, "fileA")})
 
     def test_rglob(self):
         P = self.cls
         p = P(BASE, "dirC")
         self.assertEqual(set(p.rglob("FILEd")),
-                         set([P(BASE, "dirC/dirD/fileD")]))
+                         {P(BASE, "dirC/dirD/fileD")})
 
     def test_expanduser(self):
         P = self.cls

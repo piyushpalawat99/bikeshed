@@ -10,7 +10,7 @@
 #  [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 #
 
-import constructs, tokenizer
+from . import constructs, tokenizer
 import itertools
 
 def _name(thing):
@@ -35,8 +35,8 @@ class Production(object):
 
     def __unicode__(self):
         output = self._leadingSpace + self._unicode()
-        output += ''.join([unicode(token) for token in self._tail]) if (self._tail) else ''
-        return output + unicode(self._semicolon) + self._trailingSpace
+        output += ''.join([str(token) for token in self._tail]) if (self._tail) else ''
+        return output + str(self._semicolon) + self._trailingSpace
 
     def _markup(self, generator):
         generator.addText(self._unicode())
@@ -46,8 +46,8 @@ class Production(object):
         generator.addText(self._leadingSpace)
         target = self._markup(generator)
         if (target._tail):
-            generator.addText(''.join([unicode(token) for token in target._tail]))
-        generator.addText(unicode(target._semicolon))
+            generator.addText(''.join([str(token) for token in target._tail]))
+        generator.addText(str(target._semicolon))
         if (self != target):
             generator.addText(target._trailingSpace)
         generator.addText(self._trailingSpace)
@@ -112,7 +112,7 @@ class IntegerType(Production):   # "short" | "long" ["long"]
     def __init__(self, tokens):
         Production.__init__(self, tokens)
         self._space = None
-        token = tokens.next()
+        token = next(tokens)
         if ('long' == token.text):
             self.type = 'long'
             token = tokens.sneakPeek()
@@ -159,7 +159,7 @@ class UnsignedIntegerType(Production):   # "unsigned" IntegerType | IntegerType
         self._didParse(tokens, False)
 
     def _unicode(self):
-        return (unicode(self.unsigned) + self.type._unicode()) if (self.unsigned) else self.type._unicode()
+        return (str(self.unsigned) + self.type._unicode()) if (self.unsigned) else self.type._unicode()
 
     def _markup(self, generator):
         if (self.unsigned):
@@ -178,7 +178,7 @@ class FloatType(Production):   # "float" | "double"
 
     def __init__(self, tokens):
         Production.__init__(self, tokens)
-        token = tokens.next()
+        token = next(tokens)
         self.type = token.text
         self._didParse(tokens, False)
 
@@ -210,7 +210,7 @@ class UnrestrictedFloatType(Production): # "unrestricted" FloatType | FloatType
         self._didParse(tokens, False)
 
     def _unicode(self):
-        return (unicode(self.unrestricted) + unicode(self.type)) if (self.unrestricted) else unicode(self.type)
+        return (str(self.unrestricted) + str(self.type)) if (self.unrestricted) else str(self.type)
 
     def _markup(self, generator):
         if (self.unrestricted):
@@ -242,12 +242,12 @@ class PrimitiveType(Production): # UnsignedIntegerType | UnrestrictedFloatType |
         self._didParse(tokens, False)
 
     def _unicode(self):
-        if (isinstance(self.type, basestring)):
-            return unicode(self.type)
+        if (isinstance(self.type, str)):
+            return str(self.type)
         return self.type._unicode()
 
     def _markup(self, generator):
-        if (isinstance(self.type, basestring)):
+        if (isinstance(self.type, str)):
             generator.addKeyword(self.type)
             return self
         return self.type._markup(generator)
@@ -278,10 +278,10 @@ class ConstType(Production): # PrimitiveType [Null] | identifier [Null]
         self._didParse(tokens)
 
     def _unicode(self):
-        return unicode(self.type) + (unicode(self.null) if (self.null) else '')
+        return str(self.type) + (str(self.null) if (self.null) else '')
 
     def _markup(self, generator):
-        if (isinstance(self.type, basestring)):
+        if (isinstance(self.type, str)):
             generator.addTypeName(self.type)
             if (self.null):
                 generator.addText(self.null)
@@ -340,10 +340,10 @@ class ConstValue(Production):    # "true" | "false" | FloatLiteral | integer | "
         self._didParse(tokens)
 
     def _unicode(self):
-        return unicode(self.value)
+        return str(self.value)
 
     def _markup(self, generator):
-        if (isinstance(self.value, basestring)):
+        if (isinstance(self.value, str)):
             if (self.value in tokenizer.Tokenizer.SymbolIdents):
                 generator.addKeyword(self.value)
             else:
@@ -409,14 +409,14 @@ class EnumValueList(Production): # EnumValue ["," EnumValue]... [","]
         self._didParse(tokens)
 
     def _markup(self, generator):
-        for value, _comma in itertools.izip_longest(self.values, self._commas, fillvalue = ''):
+        for value, _comma in itertools.zip_longest(self.values, self._commas, fillvalue = ''):
             value.markup(generator)
             if (_comma):
                 _comma.markup(generator)
         return self
 
     def _unicode(self):
-        return ''.join([unicode(value) + unicode(comma) for value, comma in itertools.izip_longest(self.values, self._commas, fillvalue = '')])
+        return ''.join([str(value) + str(comma) for value, comma in itertools.zip_longest(self.values, self._commas, fillvalue = '')])
 
     def __repr__(self):
         return '[EnumValueList: ' + ''.join([repr(value) for value in self.values]) + ']'
@@ -452,9 +452,9 @@ class TypeSuffix(Production):    # "[" "]" [TypeSuffix] | "?" [TypeSuffixStartin
         self._didParse(tokens, False)
 
     def _unicode(self):
-        output = (unicode(self._openBracket) + unicode(self._closeBracket)) if (self.array) else ''
-        output += unicode(self.null) if (self.null) else ''
-        return output + (unicode(self.suffix) if (self.suffix) else '')
+        output = (str(self._openBracket) + str(self._closeBracket)) if (self.array) else ''
+        output += str(self.null) if (self.null) else ''
+        return output + (str(self.suffix) if (self.suffix) else '')
 
     def __repr__(self):
         output = '[TypeSuffix: ' + ('[array] ' if (self.array) else '') + ('[null] ' if (self.null) else '')
@@ -479,7 +479,7 @@ class TypeSuffixStartingWithArray(Production):   # "[" "]" [TypeSuffix]
         self._didParse(tokens, False)
 
     def _unicode(self):
-        return unicode(self._openBracket) + unicode(self._closeBracket) + (unicode(self.suffix) if (self.suffix) else '')
+        return str(self._openBracket) + str(self._closeBracket) + (str(self.suffix) if (self.suffix) else '')
 
     def __repr__(self):
         return '[TypeSuffixStartingWithArray: ' + (repr(self.suffix) if (self.suffix) else '') + ']'
@@ -513,7 +513,7 @@ class SingleType(Production):    # NonAnyType | "any" [TypeSuffixStartingWithArr
         return [self.typeName]
 
     def _unicode(self):
-        return unicode(self.type) + (unicode(self.suffix) if (self.suffix) else '')
+        return str(self.type) + (str(self.suffix) if (self.suffix) else '')
 
     def _markup(self, generator):
         self.type._markup(generator)
@@ -621,18 +621,18 @@ class NonAnyType(Production):   # PrimitiveType [TypeSuffix] | "ByteString" [Typ
 
     def _unicode(self):
         if (self.sequence):
-            output = unicode(self.sequence) + unicode(self._openType) + unicode(self.type) + unicode(self._closeType)
-            return output + (unicode(self.null) if (self.null) else '')
+            output = str(self.sequence) + str(self._openType) + str(self.type) + str(self._closeType)
+            return output + (str(self.null) if (self.null) else '')
         if (self.promise):
-            output = unicode(self.promise) + unicode(self._openType) + unicode(self.type) + unicode(self._closeType)
-            return output + (unicode(self.null) if (self.null) else '')
+            output = str(self.promise) + str(self._openType) + str(self.type) + str(self._closeType)
+            return output + (str(self.null) if (self.null) else '')
         if (self.record):
-            output = unicode(self.record) + unicode(self._openType) + unicode(self.keyType) + unicode(self._comma) + unicode(self.type) + unicode(self._closeType)
-            return output + (unicode(self.null) if (self.null) else '')
+            output = str(self.record) + str(self._openType) + str(self.keyType) + str(self._comma) + str(self.type) + str(self._closeType)
+            return output + (str(self.null) if (self.null) else '')
 
-        output = unicode(self.type)
-        output = output + (unicode(self.null) if (self.null) else '')
-        return output + (unicode(self.suffix) if (self.suffix) else '')
+        output = str(self.type)
+        output = output + (str(self.null) if (self.null) else '')
+        return output + (str(self.suffix) if (self.suffix) else '')
 
     def _markup(self, generator):
         if (self.sequence):
@@ -658,7 +658,7 @@ class NonAnyType(Production):   # PrimitiveType [TypeSuffix] | "ByteString" [Typ
             generator.addText(self._closeType)
             generator.addText(self.null)
             return self
-        if (isinstance(self.type, basestring)):
+        if (isinstance(self.type, str)):
             generator.addTypeName(self.type)
             if (self.suffix):
                 self.suffix.markup(generator)
@@ -733,9 +733,9 @@ class UnionMemberType(Production):   # [ExtendedAttributeList] NonAnyType | Unio
         return self._extendedAttributes if (self._extendedAttributes) else {}
 
     def _unicode(self):
-        output = unicode(self._extendedAttributes) if (self._extendedAttributes) else ''
-        output += (unicode(self.any) + unicode(self._openBracket) + unicode(self._closeBracket)) if (self.any) else unicode(self.type)
-        return output + (unicode(self.suffix) if (self.suffix) else '')
+        output = str(self._extendedAttributes) if (self._extendedAttributes) else ''
+        output += (str(self.any) + str(self._openBracket) + str(self._closeBracket)) if (self.any) else str(self.type)
+        return output + (str(self.suffix) if (self.suffix) else '')
 
     def _markup(self, generator):
         if (self.any):
@@ -792,13 +792,13 @@ class UnionType(Production): # "(" UnionMemberType ["or" UnionMemberType]... ")"
         return [type.typeName for type in self.types]
 
     def _unicode(self):
-        output = unicode(self._openParen)
-        output += ''.join([unicode(type) + unicode(_or) for type, _or in itertools.izip_longest(self.types, self._ors, fillvalue = '')])
-        return output + unicode(self._closeParen)
+        output = str(self._openParen)
+        output += ''.join([str(type) + str(_or) for type, _or in itertools.zip_longest(self.types, self._ors, fillvalue = '')])
+        return output + str(self._closeParen)
 
     def _markup(self, generator):
         generator.addText(self._openParen)
-        for type, _or in itertools.izip_longest(self.types, self._ors, fillvalue = ''):
+        for type, _or in itertools.zip_longest(self.types, self._ors, fillvalue = ''):
             generator.addType(type)
             if (_or):
                 _or.markup(generator)
@@ -834,7 +834,7 @@ class Type(Production):  # SingleType | UnionType [TypeSuffix]
         return self.type.typeNames
 
     def _unicode(self):
-        return unicode(self.type) + (self.suffix._unicode() if (self.suffix) else '')
+        return str(self.type) + (self.suffix._unicode() if (self.suffix) else '')
 
     def _markup(self, generator):
         self.type.markup(generator)
@@ -876,7 +876,7 @@ class TypeWithExtendedAttributes(Production):  # [ExtendedAttributeList] SingleT
         return self._extendedAttributes if (self._extendedAttributes) else {}
 
     def _unicode(self):
-        return (unicode(self._extendedAttributes) if (self._extendedAttributes) else '') + unicode(self.type) + (self.suffix._unicode() if (self.suffix) else '')
+        return (str(self._extendedAttributes) if (self._extendedAttributes) else '') + str(self.type) + (self.suffix._unicode() if (self.suffix) else '')
 
     def _markup(self, generator):
         if (self._extendedAttributes):
@@ -924,24 +924,24 @@ class Ignore(Production):    # "inherits" "getter" | "getraises" "(" ... ")" | "
     def __init__(self, tokens):
         Production.__init__(self, tokens)
         self.tokens = []
-        token = tokens.next()
+        token = next(tokens)
         self.tokens.append(token)
         if (token and token.isIdentifier() and ('inherits' == token.text)):
             space = tokens.whitespace()
             if (space):
                 self.tokens.append(space)
-            self.tokens.append(tokens.next())   # "getter"
+            self.tokens.append(next(tokens))   # "getter"
         else:
             space = tokens.whitespace()
             if (space):
                 self.tokens.append(space)
-            self.tokens.append(tokens.next())    # "("
+            self.tokens.append(next(tokens))    # "("
             self.tokens += tokens.seekSymbol(')')
         self._didParse(tokens)
         tokens.didIgnore(self.tokens)
 
     def _unicode(self):
-        return ''.join([unicode(token) for token in self.tokens])
+        return ''.join([str(token) for token in self.tokens])
 
 
 class IgnoreMultipleInheritance(Production):    # [, identifier]...
@@ -965,12 +965,12 @@ class IgnoreMultipleInheritance(Production):    # [, identifier]...
             tokens.didIgnore(self)
 
     def _unicode(self):
-        return unicode(self._comma) + self.inherit + (unicode(self.next) if (self.next) else '')
+        return str(self._comma) + self.inherit + (str(self.__next__) if (self.__next__) else '')
 
     def _markup(self, generator):
         generator.addText(self._comma)
         generator.addTypeName(self.inherit)
-        if (self.next):
+        if (self.__next__):
             self.next.markup(generator)
         return self
 
@@ -994,7 +994,7 @@ class Inheritance(Production):   # ":" identifier [IgnoreMultipleInheritance]
         self._didParse(tokens)
 
     def _unicode(self):
-        return unicode(self._colon) + self.base + (unicode(self._ignore) if (self._ignore) else '')
+        return str(self._colon) + self.base + (str(self._ignore) if (self._ignore) else '')
 
     def _markup(self, generator):
         generator.addText(self._colon)
@@ -1037,12 +1037,12 @@ class Default(Production):   # "=" ConstValue | "=" string | "=" "[" "]"
         self._didParse(tokens)
 
     def _unicode(self):
-        return unicode(self._equals) + (unicode(self.value) if (self.value) else unicode(self._openBracket) + unicode(self._closeBracket))
+        return str(self._equals) + (str(self.value) if (self.value) else str(self._openBracket) + str(self._closeBracket))
 
     def _markup(self, generator):
         self._equals.markup(generator)
         if (self.value):
-            if (isinstance(self.value, basestring)):
+            if (isinstance(self.value, str)):
                 generator.addText(self.value)
                 return self
             return self.value._markup(generator)
@@ -1144,7 +1144,7 @@ class ArgumentList(Production):    # Argument ["," Argument]...
         return ['']
 
     def matchesNames(self, argumentNames):
-        for name, argument in itertools.izip_longest(argumentNames, self.arguments, fillvalue=None):
+        for name, argument in itertools.zip_longest(argumentNames, self.arguments, fillvalue=None):
             if (name):
                 if ((argument is None) or (argument.name != name)):
                     return False
@@ -1160,7 +1160,7 @@ class ArgumentList(Production):    # Argument ["," Argument]...
         return [argument.name for argument in self.arguments]
 
     def __getitem__(self, key):
-        if (isinstance(key, basestring)):
+        if (isinstance(key, str)):
             for argument in self.arguments:
                 if (argument.name == key):
                     return argument
@@ -1171,7 +1171,7 @@ class ArgumentList(Production):    # Argument ["," Argument]...
         return iter(self.arguments)
 
     def __contains__(self, key):
-        if (isinstance(key, basestring)):
+        if (isinstance(key, str)):
             for argument in self.arguments:
                 if (argument.name == key):
                     return True
@@ -1179,10 +1179,10 @@ class ArgumentList(Production):    # Argument ["," Argument]...
         return (key in self.arguments)
 
     def _unicode(self):
-        return ''.join([unicode(argument) + unicode(comma) for argument, comma in itertools.izip_longest(self.arguments, self._commas, fillvalue = '')])
+        return ''.join([str(argument) + str(comma) for argument, comma in itertools.zip_longest(self.arguments, self._commas, fillvalue = '')])
 
     def _markup(self, generator):
-        for argument, comma in itertools.izip_longest(self.arguments, self._commas, fillvalue = ''):
+        for argument, comma in itertools.zip_longest(self.arguments, self._commas, fillvalue = ''):
             argument.markup(generator)
             generator.addText(comma)
         return self
@@ -1209,7 +1209,7 @@ class ReturnType(Production):    # Type | "void"
         self._didParse(tokens)
 
     def _unicode(self):
-        return unicode(self.type)
+        return str(self.type)
 
     def _markup(self, generator):
         if (isinstance(self.type, Symbol)):
@@ -1268,10 +1268,10 @@ class AttributeRest(Production):   # ["readonly"] "attribute" TypeWithExtendedAt
         self._didParse(tokens)
 
     def _unicode(self):
-        output = unicode(self.readonly) if (self.readonly) else ''
-        output += unicode(self._attribute) + unicode(self.type)
+        output = str(self.readonly) if (self.readonly) else ''
+        output += str(self._attribute) + str(self.type)
         output += self.name
-        return output + (unicode(self._ignore) if (self._ignore) else '')
+        return output + (str(self._ignore) if (self._ignore) else '')
 
     def _markup(self, generator):
         if (self.readonly):
@@ -1344,7 +1344,7 @@ class MixinAttribute(ChildProduction):   # ReadOnly AttributeRest
         return None
 
     def _unicode(self):
-        return unicode(self.attribute)
+        return str(self.attribute)
 
     def _markup(self, generator):
         return self.attribute._markup(generator)
@@ -1384,8 +1384,8 @@ class Attribute(ChildProduction):   # ["inherit"] AttributeRest
         return None
 
     def _unicode(self):
-        output = unicode(self.inherit) if (self.inherit) else ''
-        return output + unicode(self.attribute)
+        output = str(self.inherit) if (self.inherit) else ''
+        return output + str(self.attribute)
 
     def _markup(self, generator):
         if (self.inherit):
@@ -1430,8 +1430,8 @@ class OperationRest(ChildProduction):   # [identifier] "(" [ArgumentList] ")" [I
 
     def _unicode(self):
         output = self.name if (self.name) else ''
-        output += unicode(self._openParen) + (unicode(self.arguments) if (self.arguments) else '') + unicode(self._closeParen)
-        return output + (unicode(self._ignore) if (self._ignore) else '')
+        output += str(self._openParen) + (str(self.arguments) if (self.arguments) else '') + str(self._closeParen)
+        return output + (str(self._ignore) if (self._ignore) else '')
 
     def _markup(self, generator):
         generator.addName(self.name)
@@ -1499,12 +1499,12 @@ class Iterable(ChildProduction):     # "iterable" "<" TypeWithExtendedAttributes
         return None
 
     def _unicode(self):
-        output = unicode(self._iterable) + unicode(self._openType)
+        output = str(self._iterable) + str(self._openType)
         if (self.type):
-            output += unicode(self.type)
+            output += str(self.type)
         else:
-            output += unicode(self.keyType) + unicode(self._comma) + unicode(self.valueType)
-        return output + unicode(self._closeType)
+            output += str(self.keyType) + str(self._comma) + str(self.valueType)
+        return output + str(self._closeType)
 
     def _markup(self, generator):
         self._iterable.markup(generator)
@@ -1565,9 +1565,9 @@ class Maplike(ChildProduction):      # ["readonly"] "maplike" "<" TypeWithExtend
         return None
 
     def _unicode(self):
-        output = unicode(self.readonly) if (self.readonly) else ''
-        output += unicode(self._maplike) + unicode(self._openType) + unicode(self.keyType) + unicode(self._comma)
-        return output + unicode(self.valueType) + unicode(self._closeType)
+        output = str(self.readonly) if (self.readonly) else ''
+        output += str(self._maplike) + str(self._openType) + str(self.keyType) + str(self._comma)
+        return output + str(self.valueType) + str(self._closeType)
 
     def _markup(self, generator):
         if (self.readonly):
@@ -1620,8 +1620,8 @@ class Setlike(ChildProduction):      # ["readonly"] "setlike" "<" TypeWithExtend
         return None
 
     def _unicode(self):
-        output = unicode(self.readonly) if (self.readonly) else ''
-        return output + unicode(self._setlike) + unicode(self._openType) + unicode(self.type) + unicode(self._closeType)
+        output = str(self.readonly) if (self.readonly) else ''
+        return output + str(self._setlike) + str(self._openType) + str(self.type) + str(self._closeType)
 
     def _markup(self, generator):
         if (self.readonly):
@@ -1683,8 +1683,8 @@ class SpecialOperation(ChildProduction):    # Special [Special]... ReturnType Op
         return [self.methodName]
 
     def _unicode(self):
-        output = u''.join([unicode(special) for special in self.specials])
-        return output + unicode(self.returnType) + unicode(self.operation)
+        output = ''.join([str(special) for special in self.specials])
+        return output + str(self.returnType) + str(self.operation)
 
     def _markup(self, generator):
         for special in self.specials:
@@ -1737,7 +1737,7 @@ class Operation(ChildProduction):   # ReturnType OperationRest
         return [self.methodName]
 
     def _unicode(self):
-        return unicode(self.returnType) + unicode(self.operation)
+        return str(self.returnType) + str(self.operation)
 
     def _markup(self, generator):
         self.returnType.markup(generator)
@@ -1809,9 +1809,9 @@ class Stringifier(ChildProduction): # "stringifier" AttributeRest | "stringifier
         return []
 
     def _unicode(self):
-        output = unicode(self._stringifier)
-        output += (unicode(self.returnType) + unicode(self.operation)) if (self.operation) else ''
-        return output + (unicode(self.attribute) if (self.attribute) else '')
+        output = str(self._stringifier)
+        output += (str(self.returnType) + str(self.operation)) if (self.operation) else ''
+        return output + (str(self.attribute) if (self.attribute) else '')
 
     def _markup(self, generator):
         self._stringifier.markup(generator)
@@ -1850,11 +1850,11 @@ class Identifiers(Production):  # "," identifier ["," identifier]...
         self._didParse(tokens)
 
     def _unicode(self):
-        output = unicode(self._comma) + self.name
-        return output + (unicode(self.next) if (self.next) else '')
+        output = str(self._comma) + self.name
+        return output + (str(self.__next__) if (self.__next__) else '')
 
     def __repr__(self):
-        return ' ' + self.name.encode('ascii', 'replace') + (repr(self.next) if (self.next) else '')
+        return ' ' + self.name.encode('ascii', 'replace') + (repr(self.__next__) if (self.__next__) else '')
 
 
 class StaticMember(ChildProduction):    # "static" AttributeRest | "static" ReturnType OperationRest
@@ -1915,10 +1915,10 @@ class StaticMember(ChildProduction):    # "static" AttributeRest | "static" Retu
         return []
 
     def _unicode(self):
-        output = unicode(self._static)
+        output = str(self._static)
         if (self.operation):
-            return output + unicode(self.returnType) + unicode(self.operation)
-        return output + unicode(self.attribute)
+            return output + str(self.returnType) + str(self.operation)
+        return output + str(self.attribute)
 
     def _markup(self, generator):
         self._static.markup(generator)
@@ -1965,7 +1965,7 @@ class ExtendedAttributeList(ChildProduction):   # "[" ExtendedAttribute ["," Ext
         return [attribute.name for attribute in self.attributes]
 
     def __getitem__(self, key):
-        if (isinstance(key, basestring)):
+        if (isinstance(key, str)):
             for attribute in self.attributes:
                 if (key == attribute.name):
                     return attribute
@@ -1976,7 +1976,7 @@ class ExtendedAttributeList(ChildProduction):   # "[" ExtendedAttribute ["," Ext
         return iter(self.attributes)
 
     def __contains__(self, key):
-        if (isinstance(key, basestring)):
+        if (isinstance(key, str)):
             for attribute in self.attributes:
                 if (key == attribute.name):
                     return True
@@ -1984,13 +1984,13 @@ class ExtendedAttributeList(ChildProduction):   # "[" ExtendedAttribute ["," Ext
         return (key in self.attributes)
 
     def _unicode(self):
-        output = unicode(self._openBracket)
-        output += ''.join([unicode(attribute) + unicode(comma) for attribute, comma in itertools.izip_longest(self.attributes, self._commas, fillvalue = '')])
-        return output + unicode(self._closeBracket)
+        output = str(self._openBracket)
+        output += ''.join([str(attribute) + str(comma) for attribute, comma in itertools.zip_longest(self.attributes, self._commas, fillvalue = '')])
+        return output + str(self._closeBracket)
 
     def _markup(self, generator):
         generator.addText(self._openBracket)
-        for attribute, comma in itertools.izip_longest(self.attributes, self._commas, fillvalue = ''):
+        for attribute, comma in itertools.zip_longest(self.attributes, self._commas, fillvalue = ''):
             attribute.markup(generator)
             generator.addText(comma)
         generator.addText(self._closeBracket)

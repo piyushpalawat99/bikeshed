@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 from .main import englishFromList
 from ..messages import *
@@ -103,7 +103,7 @@ def canonicalizeStatus(rawStatus, group):
     def megaGroupsForStatus(status):
         # Returns a list of megagroups that recognize the given status
         megaGroups = []
-        for key in shortToLongStatus.keys():
+        for key in list(shortToLongStatus.keys()):
             mg,_,s = key.partition("/")
             if s == status:
                 megaGroups.append(mg)

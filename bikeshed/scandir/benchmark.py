@@ -111,8 +111,8 @@ def benchmark(path, get_size=False):
     scandir_walk_time = 1000000
     N = 3
     for i in range(N):
-        print('Benchmarking walks on {0}, repeat {1}/{2}...'.format(
-            path, i + 1, N))
+        print(('Benchmarking walks on {0}, repeat {1}/{2}...'.format(
+            path, i + 1, N)))
         os_walk_time = min(os_walk_time, timeit.timeit(do_os_walk, number=1))
         scandir_walk_time = min(scandir_walk_time,
                                 timeit.timeit(do_scandir_walk, number=1))
@@ -122,11 +122,11 @@ def benchmark(path, get_size=False):
             equality = 'equal'
         else:
             equality = 'NOT EQUAL!'
-        print('os.walk size {0}, scandir.walk size {1} -- {2}'.format(
-            sizes['os_walk'], sizes['scandir_walk'], equality))
+        print(('os.walk size {0}, scandir.walk size {1} -- {2}'.format(
+            sizes['os_walk'], sizes['scandir_walk'], equality)))
 
-    print('os.walk took {0:.3f}s, scandir.walk took {1:.3f}s -- {2:.1f}x as fast'.format(
-          os_walk_time, scandir_walk_time, os_walk_time / scandir_walk_time))
+    print(('os.walk took {0:.3f}s, scandir.walk took {1:.3f}s -- {2:.1f}x as fast'.format(
+          os_walk_time, scandir_walk_time, os_walk_time / scandir_walk_time)))
 
 
 if __name__ == '__main__':
@@ -147,8 +147,8 @@ using it instead of creating a tree."""
     else:
         tree_dir = os.path.join(os.path.dirname(__file__), 'benchtree')
         if not os.path.exists(tree_dir):
-            print('Creating tree at {0}: depth={1}, num_dirs={2}, num_files={3}'.format(
-                tree_dir, DEPTH, NUM_DIRS, NUM_FILES))
+            print(('Creating tree at {0}: depth={1}, num_dirs={2}, num_files={3}'.format(
+                tree_dir, DEPTH, NUM_DIRS, NUM_FILES)))
             create_tree(tree_dir)
 
     if options.scandir == 'generic':

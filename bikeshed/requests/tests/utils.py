@@ -5,7 +5,7 @@ import os
 @contextlib.contextmanager
 def override_environ(**kwargs):
     save_env = dict(os.environ)
-    for key, value in kwargs.items():
+    for key, value in list(kwargs.items()):
         if value is None:
             del os.environ[key]
         else:

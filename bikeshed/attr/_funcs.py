@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+
 
 import copy
 
@@ -40,7 +40,7 @@ def asdict(inst, recurse=True, filter=None, dict_factory=dict,
     rv = dict_factory()
     for a in attrs:
         v = getattr(inst, a.name)
-        if filter is not None and not filter(a, v):
+        if filter is not None and not list(filter(a, v)):
             continue
         if recurse is True:
             if has(v.__class__):
@@ -100,7 +100,7 @@ def astuple(inst, recurse=True, filter=None, tuple_factory=tuple,
     retain = retain_collection_types  # Very long. :/
     for a in attrs:
         v = getattr(inst, a.name)
-        if filter is not None and not filter(a, v):
+        if filter is not None and not list(filter(a, v)):
             continue
         if recurse is True:
             if has(v.__class__):

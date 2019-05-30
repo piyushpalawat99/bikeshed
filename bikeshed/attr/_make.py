@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function
+
 
 import hashlib
 import linecache
@@ -184,7 +184,7 @@ def _transform_attrs(cls, these):
     if these is None:
         ca_list = [(name, attr)
                    for name, attr
-                   in cls.__dict__.items()
+                   in list(cls.__dict__.items())
                    if isinstance(attr, _CountingAttr)]
     else:
         ca_list = [(name, ca)
@@ -346,7 +346,7 @@ def attributes(maybe_cls=None, these=None, repr_ns=None,
             if these is None:
                 ca_list = [name
                            for name, attr
-                           in cls.__dict__.items()
+                           in list(cls.__dict__.items())
                            if isinstance(attr, _CountingAttr)]
             else:
                 ca_list = list(iterkeys(these))
@@ -399,7 +399,7 @@ def attributes(maybe_cls=None, these=None, repr_ns=None,
             # compiler will bake a reference to the class in the method itself
             # as `method.__closure__`.  Since we replace the class with a
             # clone, we rewrite these references so it keeps working.
-            for item in cls.__dict__.values():
+            for item in list(cls.__dict__.values()):
                 closure_cells = getattr(item, "__closure__", None)
                 if not closure_cells:  # Catch None or the empty list.
                     continue

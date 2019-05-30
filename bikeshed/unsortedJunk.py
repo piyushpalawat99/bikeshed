@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import io
 import itertools
@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import re
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from collections import defaultdict, namedtuple
 from functools import partial as curry
 
@@ -142,8 +142,8 @@ def canonicalizeShortcuts(doc):
         "algorithm":"data-algorithm",
         "ignore":"data-var-ignore"
     }
-    for el in findAll(",".join("[{0}]".format(attr) for attr in attrFixup.keys()), doc):
-        for attr, fixedAttr in attrFixup.items():
+    for el in findAll(",".join("[{0}]".format(attr) for attr in list(attrFixup.keys())), doc):
+        for attr, fixedAttr in list(attrFixup.items()):
             if el.get(attr) is not None:
                 el.set(fixedAttr, el.get(attr))
                 del el.attrib[attr]
@@ -206,7 +206,7 @@ def checkVarHygiene(doc):
         varCounts[key] += 1
     foldedVarCounts = defaultdict(lambda: 0)
     atLeastOneAlgo = False
-    for (var,algo),count in varCounts.items():
+    for (var,algo),count in list(varCounts.items()):
         if algo:
             atLeastOneAlgo = True
         if count > 1:
@@ -216,7 +216,7 @@ def checkVarHygiene(doc):
         key = var, algo
         foldedVarCounts[key] += 1
     varLines = []
-    for (var, algo),count in foldedVarCounts.items():
+    for (var, algo),count in list(foldedVarCounts.items()):
         if count == 1:
             if algo:
                 varLines.append("  '{0}', in algorithm '{1}'".format(var, algo))
@@ -229,7 +229,7 @@ def checkVarHygiene(doc):
         addVarClickHighlighting(doc)
 
     # Look for algorithms that show up twice; these are errors.
-    for algo, count in Counter(el.get('data-algorithm') for el in findAll("[data-algorithm]", doc)).items():
+    for algo, count in list(Counter(el.get('data-algorithm') for el in findAll("[data-algorithm]", doc)).items()):
         if count > 1:
             die("Multiple declarations of the '{0}' algorithm.", algo)
             return
@@ -352,7 +352,7 @@ def fixIntraDocumentReferences(doc):
     ids = {el.get('id'):el for el in findAll("[id]", doc)}
     headingIDs = {el.get('id'):el for el in findAll("[id].heading", doc)}
     for el in findAll("a[href^='#']:not([href='#']):not(.self-link):not([data-link-type])", doc):
-        targetID = urllib.unquote(el.get("href")[1:])
+        targetID = urllib.parse.unquote(el.get("href")[1:])
         if el.get('data-section') is not None and targetID not in headingIDs:
             die("Couldn't find target document section {0}:\n{1}", targetID, outerHTML(el), el=el)
             continue
@@ -533,14 +533,14 @@ def determineDfnType(dfn, inferCSS=False):
     # 2. Look for a prefix on the id
     if dfn.get('id'):
         id = dfn.get('id')
-        for prefix, type in config.dfnClassToType.items():
+        for prefix, type in list(config.dfnClassToType.items()):
             if id.startswith(prefix):
                 return type
     # 3. Look for a class or data-dfn-type on the ancestors
     for ancestor in dfn.iterancestors():
         if ancestor.get('data-dfn-type'):
             return ancestor.get('data-dfn-type')
-        for cls, type in config.dfnClassToType.items():
+        for cls, type in list(config.dfnClassToType.items()):
             if hasClass(ancestor, cls):
                 return type
             if hasClass(ancestor, "idl") and not hasClass(ancestor, "extract"):
@@ -563,7 +563,7 @@ def determineDfnType(dfn, inferCSS=False):
 
 
 def classifyDfns(doc, dfns):
-    dfnTypeToPrefix = {v:k for k,v in config.dfnClassToType.items()}
+    dfnTypeToPrefix = {v:k for k,v in list(config.dfnClassToType.items())}
     for el in dfns:
         dfnType = determineDfnType(el, inferCSS=doc.md.inferCSSDfns)
         if dfnType not in config.dfnTypes:
@@ -792,8 +792,8 @@ def verifyUsageOfAllLocalBiblios(doc):
     were used in the spec,
     so you can remove entries when they're no longer necessary.
     '''
-    usedBiblioKeys = set(x.lower() for x in doc.normativeRefs.keys() + doc.informativeRefs.keys())
-    localBiblios = [b["linkText"].lower() for bs in doc.refs.biblios.values() for b in bs if b['order'] == 1]
+    usedBiblioKeys = set(x.lower() for x in list(doc.normativeRefs.keys()) + list(doc.informativeRefs.keys()))
+    localBiblios = [b["linkText"].lower() for bs in list(doc.refs.biblios.values()) for b in bs if b['order'] == 1]
     unusedBiblioKeys = []
     for b in localBiblios:
         if b not in usedBiblioKeys:
@@ -921,8 +921,8 @@ def removeMultipleLinks(doc):
             # Don't strip out repeated links from opaque elements
             continue
         paras[parentElement(el)][el.get("href")].append(el)
-    for linkGroups in paras.values():
-        for href,links in linkGroups.items():
+    for linkGroups in list(paras.values()):
+        for href,links in list(linkGroups.items()):
             if len(links) > 1:
                 for el in links[1:]:
                     el.tag = "span"
@@ -1200,8 +1200,8 @@ def formatArgumentdefTables(doc):
             argName = textContent(tds[0]).strip()
             arg = method.findArgument(argName)
             if arg:
-                appendChild(tds[1], unicode(arg.type))
-                if unicode(arg.type).strip().endswith("?"):
+                appendChild(tds[1], str(arg.type))
+                if str(arg.type).strip().endswith("?"):
                     appendChild(tds[2],
                                 E.span({"class":"yes"}, "✔"))
                 else:
@@ -1316,7 +1316,7 @@ def inlineRemoteIssues(doc):
     # Save the cache for later
     try:
         with io.open(config.scriptPath("spec-data", "github-issues.json"), 'w', encoding="utf-8") as f:
-            f.write(unicode(json.dumps(responses, ensure_ascii=False, indent=2, sort_keys=True)))
+            f.write(str(json.dumps(responses, ensure_ascii=False, indent=2, sort_keys=True)))
     except Exception as e:
         warn("Couldn't save GitHub Issues cache to disk.\n{0}", e)
     return

@@ -20,21 +20,21 @@ class UnsupportedExpression(Exception):
         self.expression = expression
 
     def __unicode__(self):
-        return u'Unsopported expression: ' + self.expression
+        return 'Unsopported expression: ' + self.expression
 
 class BadExpression(Exception):
     def __init__(self, expression):
         self.expression = expression
 
     def __unicode__(self):
-        return u'Bad expression: ' + self.expression
+        return 'Bad expression: ' + self.expression
 
 class BadVariable(Exception):
     def __init__(self, variable):
         self.variable = variable
 
     def __unicode__(self):
-        return u'Bad variable: ' + self.variable
+        return 'Bad variable: ' + self.variable
 
 class URITemplate(object):
     alpha = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -97,7 +97,7 @@ class URITemplate(object):
         return self.template.encode('ascii', 'replace')
 
     def __unicode__(self):
-        return unicode(self.template)
+        return str(self.template)
 
 
 class Variable(object):
@@ -177,7 +177,7 @@ class Expression(object):
         return self._encode(value, URITemplate.unreserved, False)
 
     def _uriEncodeName(self, name):
-        return self._encode(unicode(name), URITemplate.unreserved + URITemplate.reserved, True) if (name) else ''
+        return self._encode(str(name), URITemplate.unreserved + URITemplate.reserved, True) if (name) else ''
     
     def _join(self, prefix, joiner, value):
         if (prefix):
@@ -199,16 +199,16 @@ class Expression(object):
 
     def _encodeListItem(self, variable, name, index, item, delim, prefix, joiner, first):
         if (variable.array):
-            prefix = prefix + '[' + unicode(index) + ']' if (prefix) else ''
+            prefix = prefix + '[' + str(index) + ']' if (prefix) else ''
             return self._encodeVar(variable, None, item, delim, prefix, joiner, False)
         return self._encodeVar(variable, name, item, delim, prefix, '.', False)
     
     def _encodeVar(self, variable, name, value, delim = ',', prefix = '', joiner = '=', first = True):
-        if (isinstance(value, basestring)):
+        if (isinstance(value, str)):
             return self._encodeStr(variable, name, value, prefix, joiner, first)
         elif (hasattr(value, 'keys') and hasattr(value, '__getitem__')):    # dict-like
             if (len(value)):
-                encodedItems = [self._encodeDictItem(variable, name, key, value[key], delim, prefix, joiner, first) for key in value.keys()]
+                encodedItems = [self._encodeDictItem(variable, name, key, value[key], delim, prefix, joiner, first) for key in list(value.keys())]
                 return delim.join([item for item in encodedItems if (item is not None)])
             return None
         elif (hasattr(value, '__getitem__')):   # list-like
@@ -217,7 +217,7 @@ class Expression(object):
                 return delim.join([item for item in encodedItems if (item is not None)])
             return None
         else:
-            return self._encodeStr(variable, name, unicode(value).lower(), prefix, joiner, first)
+            return self._encodeStr(variable, name, str(value).lower(), prefix, joiner, first)
 
     def expand(self, values):
         return None
@@ -334,7 +334,7 @@ class PathStyleExpansion(Expansion):
         if (variable.array):
             if (name):
                 prefix = prefix + '[' + name + ']' if (prefix) else name
-            return self._encodeVar(variable, unicode(index), item, delim, prefix, joiner, False)
+            return self._encodeVar(variable, str(index), item, delim, prefix, joiner, False)
         return self._encodeVar(variable, name, item, delim, prefix, '=' if (variable.explode) else '.', False)
 
     def _expandVar(self, variable, value):

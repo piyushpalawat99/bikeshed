@@ -1,8 +1,8 @@
-from __future__ import absolute_import
+
 try:
     from urllib.parse import urlencode
 except ImportError:
-    from urllib import urlencode
+    from urllib.parse import urlencode
 
 from .filepost import encode_multipart_formdata
 
@@ -39,7 +39,7 @@ class RequestMethods(object):
         explicitly.
     """
 
-    _encode_url_methods = set(['DELETE', 'GET', 'HEAD', 'OPTIONS'])
+    _encode_url_methods = {'DELETE', 'GET', 'HEAD', 'OPTIONS'}
 
     def __init__(self, headers=None):
         self.headers = headers or {}

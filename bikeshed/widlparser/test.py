@@ -15,7 +15,7 @@ import sys
 import itertools
 import cgi
 
-from widlparser import parser
+from .widlparser import parser
 
 
 def debugHook(type, value, tb):
@@ -28,7 +28,7 @@ def debugHook(type, value, tb):
         import pdb
         # we are NOT in interactive mode, print the exception...
         traceback.print_exception(type, value, tb)
-        print
+        print()
         # ...then start the debugger in post-mortem mode.
         pdb.pm()
 
@@ -70,7 +70,7 @@ class Marker(object):
 
 class NullMarker(object):
     def __init__(self):
-        self.text = u''
+        self.text = ''
 
     def markupConstruct(self, text, construct):
         return (None, None)
@@ -122,10 +122,10 @@ def test_difference(input, output):
         input_lines = input.split('\n')
         output_lines = output.split('\n')
 
-        for input_line, output_line in itertools.izip_longest(input_lines, output_lines, fillvalue=''):
+        for input_line, output_line in itertools.zip_longest(input_lines, output_lines, fillvalue=''):
             if (input_line != output_line):
-                print("<" + input_line)
-                print(">" + output_line)
+                print(("<" + input_line))
+                print((">" + output_line))
                 print()
 
 
@@ -135,16 +135,16 @@ if __name__ == "__main__":      # called from the command line
 
     if (1 < len(sys.argv)):
         for fileName in sys.argv[1:]:
-            print("Parsing: " + fileName)
+            print(("Parsing: " + fileName))
             file = open(fileName)
             parser.reset()
             text = file.read()
             parser.parse(text)
-            assert (text == unicode(parser))
+            assert (text == str(parser))
         quit()
 
 
-    idl = u"""dictionary CSSFontFaceLoadEventInit : EventInit { sequence<CSSFontFaceRule> fontfaces = [ ]; };
+    idl = """dictionary CSSFontFaceLoadEventInit : EventInit { sequence<CSSFontFaceRule> fontfaces = [ ]; };
 interface Simple{
     serializer;
     serializer = { foo };
@@ -158,7 +158,7 @@ interface Simple{
     static Foo foo();
     Promise<ReallyISwear>? theCheckIsInTheMail();
 };"""
-    idl += u""" // this is a comment éß
+    idl += """ // this is a comment éß
 interface Multi : One  ,  Two   ,   Three     {
         attribute short one;
         attribute DOMString id setraises(DOMException);
@@ -327,51 +327,51 @@ interface mixin MixinCanNotIncludeSetlike {
 
 """
 #    idl = idl.replace(' ', '  ')
-    print("IDL >>>\n" + idl + "\n<<<")
+    print(("IDL >>>\n" + idl + "\n<<<"))
     parser.parse(idl)
-    print(repr(parser))
+    print((repr(parser)))
 
-    test_difference(idl, unicode(parser))
-    assert(unicode(parser) == idl)
+    test_difference(idl, str(parser))
+    assert(str(parser) == idl)
 
     print("MARKED UP:")
     marker = NullMarker()
     test_difference(idl, parser.markup(marker))
     assert(marker.text == idl)
-    print(parser.markup(Marker()))
+    print((parser.markup(Marker())))
 
-    print("Complexity: " + unicode(parser.complexityFactor))
+    print(("Complexity: " + str(parser.complexityFactor)))
 
 
     for construct in parser.constructs:
-        print(unicode(construct.idlType) + u': ' + unicode(construct.normalName))
+        print((str(construct.idlType) + ': ' + str(construct.normalName)))
         for member in construct:
-            print('    ' + member.idlType + ': ' + unicode(member.normalName) + ' (' + unicode(member.name) + ')')
+            print(('    ' + member.idlType + ': ' + str(member.normalName) + ' (' + str(member.name) + ')'))
 
     print("FIND:")
-    print(parser.find('round').fullName)
-    print(parser.find('Foo/method/y').fullName)
-    print(parser.find('Foo.method').fullName)
-    print(parser.find('Foo(constructor)').fullName)
-    print(parser.find('longest').fullName)
-    print(parser.find('fooArg').fullName)
-    print(parser.find('Window').fullName)
-    print(parser.find('mediaText').fullName)
-    print(parser.find('Foo.method').markup(Marker()))
+    print((parser.find('round').fullName))
+    print((parser.find('Foo/method/y').fullName))
+    print((parser.find('Foo.method').fullName))
+    print((parser.find('Foo(constructor)').fullName))
+    print((parser.find('longest').fullName))
+    print((parser.find('fooArg').fullName))
+    print((parser.find('Window').fullName))
+    print((parser.find('mediaText').fullName))
+    print((parser.find('Foo.method').markup(Marker())))
     for method in parser.findAll('Foo.method'):
-        print(method.fullName)
+        print((method.fullName))
 
     print("NORMALIZE:")
-    print(parser.normalizedMethodName('foo'))
-    print(parser.normalizedMethodName('unknown'))
-    print(parser.normalizedMethodName('testMethod(short one, double two)'))
-    print(parser.normalizedMethodName('testMethod2(one, two, and a half)'))
-    print(parser.normalizedMethodName('bob(xxx)', 'LinkStyle'))
-    print(parser.normalizedMethodName('bob'))
-    print(parser.normalizedMethodName('bob()'))
-    print(', '.join(parser.normalizedMethodNames('method', 'Foo')))
-    print(', '.join(parser.normalizedMethodNames('method()', 'Foo')))
-    print(', '.join(parser.normalizedMethodNames('method(x)', 'Foo')))
-    print(', '.join(parser.normalizedMethodNames('method(x, y)', 'Foo')))
-    print(', '.join(parser.normalizedMethodNames('method(x, y, bar)', 'Foo')))
-    print(', '.join(parser.normalizedMethodNames('abort()', 'Foo')))
+    print((parser.normalizedMethodName('foo')))
+    print((parser.normalizedMethodName('unknown')))
+    print((parser.normalizedMethodName('testMethod(short one, double two)')))
+    print((parser.normalizedMethodName('testMethod2(one, two, and a half)')))
+    print((parser.normalizedMethodName('bob(xxx)', 'LinkStyle')))
+    print((parser.normalizedMethodName('bob')))
+    print((parser.normalizedMethodName('bob()')))
+    print((', '.join(parser.normalizedMethodNames('method', 'Foo'))))
+    print((', '.join(parser.normalizedMethodNames('method()', 'Foo'))))
+    print((', '.join(parser.normalizedMethodNames('method(x)', 'Foo'))))
+    print((', '.join(parser.normalizedMethodNames('method(x, y)', 'Foo'))))
+    print((', '.join(parser.normalizedMethodNames('method(x, y, bar)', 'Foo'))))
+    print((', '.join(parser.normalizedMethodNames('abort()', 'Foo'))))

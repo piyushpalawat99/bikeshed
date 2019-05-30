@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import io
 import json
 import re
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from collections import defaultdict
 from contextlib import closing
 
@@ -25,7 +25,7 @@ def update(path, dryRun=False):
     if not dryRun:
         groupedBiblios, allNames = groupBiblios(biblios)
         # Save each group to a file
-        for group, biblios in groupedBiblios.items():
+        for group, biblios in list(groupedBiblios.items()):
             try:
                 p = os.path.join(path, "biblio", "biblio-{0}.data".format(group))
                 writtenPaths.add(p)
@@ -63,7 +63,7 @@ def update(path, dryRun=False):
             p = os.path.join(path, "biblio-keys.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as fh:
-                fh.write(unicode(json.dumps(reducedNames, indent=0, ensure_ascii=False, sort_keys=True)))
+                fh.write(str(json.dumps(reducedNames, indent=0, ensure_ascii=False, sort_keys=True)))
         except Exception as e:
             die("Couldn't save biblio database to disk.\n{0}", e)
             return
@@ -74,7 +74,7 @@ def update(path, dryRun=False):
             p = os.path.join(path, "biblio-numeric-suffixes.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as fh:
-                fh.write(unicode(json.dumps(numberedNames, indent=0, ensure_ascii=False, sort_keys=True)))
+                fh.write(str(json.dumps(numberedNames, indent=0, ensure_ascii=False, sort_keys=True)))
         except Exception as e:
             die("Couldn't save biblio numeric-suffix information to disk.\n{0}", e)
     say("Success!")
@@ -83,19 +83,19 @@ def update(path, dryRun=False):
 
 def getSpecrefData():
     try:
-        with closing(urllib2.urlopen("https://api.specref.org/bibrefs")) as fh:
-            return unicode(fh.read(), encoding="utf-8")
-    except urllib2.URLError:
+        with closing(urllib.request.urlopen("https://api.specref.org/bibrefs")) as fh:
+            return str(fh.read(), encoding="utf-8")
+    except urllib.error.URLError:
         # SpecRef uses SNI, which old Pythons (pre-2.7.10) don't understand.
         # First try the older herokuapp.com URL.
         try:
-            with closing(urllib2.urlopen("https://specref.herokuapp.com/bibrefs")) as fh:
-                return unicode(fh.read(), encoding="utf-8")
+            with closing(urllib.request.urlopen("https://specref.herokuapp.com/bibrefs")) as fh:
+                return str(fh.read(), encoding="utf-8")
         except:
             # Try the CSSWG proxy.
             try:
-                with closing(urllib2.urlopen("https://api.csswg.org/bibrefs")) as fh:
-                    return unicode(fh.read(), encoding="utf-8")
+                with closing(urllib.request.urlopen("https://api.csswg.org/bibrefs")) as fh:
+                    return str(fh.read(), encoding="utf-8")
             except:
                 warn("Your Python is too old (pre-2.7.10) to talk to SpecRef over HTTPS, and something's wrong with the CSSWG proxy as well. Report this to the Bikeshed repo, please?")
                 raise
@@ -107,8 +107,8 @@ def getSpecrefData():
 
 def getWG21Data():
     try:
-        with closing(urllib2.urlopen("https://wg21.link/specref.json")) as fh:
-            return unicode(fh.read(), encoding="utf-8")
+        with closing(urllib.request.urlopen("https://wg21.link/specref.json")) as fh:
+            return str(fh.read(), encoding="utf-8")
     except Exception as e:
         die("Couldn't download the WG21 biblio data.\n{0}", e)
         return "{}"
@@ -116,8 +116,8 @@ def getWG21Data():
 
 def getCSSWGData():
     try:
-        with closing(urllib2.urlopen("https://raw.githubusercontent.com/w3c/csswg-drafts/master/biblio.ref")) as fh:
-            return [unicode(line, encoding="utf-8") for line in fh.readlines()]
+        with closing(urllib.request.urlopen("https://raw.githubusercontent.com/w3c/csswg-drafts/master/biblio.ref")) as fh:
+            return [str(line, encoding="utf-8") for line in fh.readlines()]
     except Exception as e:
         die("Couldn't download the CSSWG biblio data.\n{0}", e)
         return []
@@ -127,7 +127,7 @@ def groupBiblios(biblios):
     # Group the biblios by the first two letters of their keys
     groupedBiblios = DefaultOrderedDict(DefaultOrderedDict)
     allNames = []
-    for k,v in sorted(biblios.items(), key=lambda x:x[0].lower()):
+    for k,v in sorted(list(biblios.items()), key=lambda x:x[0].lower()):
         allNames.append(k)
         group = k[0:2]
         groupedBiblios[group][k] = v
@@ -157,7 +157,7 @@ def writeBiblioFile(fh, biblios):
         "string": "s",
         "alias": "a"
     }
-    for key, entries in biblios.items():
+    for key, entries in list(biblios.items()):
         b = sorted(entries, key=lambda x:x['order'])[0]
         format = b['biblioFormat']
         fh.write("{prefix}:{key}\n".format(prefix=typePrefixes[format], key=key.lower()))

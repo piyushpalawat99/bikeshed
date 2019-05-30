@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 from .DefaultOrderedDict import DefaultOrderedDict
 from .htmlhelpers import *
@@ -37,7 +37,7 @@ def addDfnPanels(doc, dfns):
                         E.b(E.a({"href":"#" + escapeUrlFrag(id)}, "#" + id)),
                         E.b("Referenced in:"))
         ul = appendChild(panel, E.ul())
-        for text,els in refs.items():
+        for text,els in list(refs.items()):
             li = appendChild(ul, E.li())
             for i,el in enumerate(els):
                 refID = el.get("id")
@@ -46,7 +46,7 @@ def addDfnPanels(doc, dfns):
                     el.set("id", safeID(doc, refID))
                 if i == 0:
                     if text is None:
-                        print [outerHTML(el) for el in els]
+                        print([outerHTML(el) for el in els])
                     appendChild(li,
                                 E.a({"href": "#" + escapeUrlFrag(refID), "data-silently-dedup": ""}, text))
                 else:
@@ -75,7 +75,7 @@ def addExternalDfnPanel(termEl, ref, elsFromHref, doc):
                     E.a({"href":ref.url}, ref.url),
                     E.b("Referenced in:"))
     ul = appendChild(panel, E.ul())
-    for text,els in refs.items():
+    for text,els in list(refs.items()):
         li = appendChild(ul, E.li())
         for i,el in enumerate(els):
             linkID = el.get("id")

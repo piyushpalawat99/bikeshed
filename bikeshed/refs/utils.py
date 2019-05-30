@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 from collections import defaultdict
 from .. import config
@@ -37,7 +37,7 @@ def filterOldVersions(refs, status=None):
         if status == ref.status == "snapshot":
             snapshotShortnameLevels[ref.shortname][ref.level].append(ref)
     refs = []
-    for shortname, levelSet in shortnameLevels.items():
+    for shortname, levelSet in list(shortnameLevels.items()):
         if status == "snapshot" and snapshotShortnameLevels[shortname]:
             # Get the latest snapshot refs if they exist and you're generating a snapshot...
             maxLevel = max(snapshotShortnameLevels[shortname].keys())
@@ -153,11 +153,11 @@ def linkTextVariations(str, linkType):
 
 
 def stripLineBreaks(obj):
-    it = obj.items() if isinstance(obj, dict) else enumerate(obj)
+    it = list(obj.items()) if isinstance(obj, dict) else enumerate(obj)
     for key, val in it:
         if isinstance(val, str):
-            obj[key] = unicode(val, encoding="utf-8").rstrip("\n")
-        elif isinstance(val, unicode):
+            obj[key] = str(val, encoding="utf-8").rstrip("\n")
+        elif isinstance(val, str):
             obj[key] = val.rstrip("\n")
         elif isinstance(val, dict) or isinstance(val, list):
             stripLineBreaks(val)

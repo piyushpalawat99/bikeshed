@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import io
 import json
 import re
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from collections import defaultdict
 from contextlib import closing
 
@@ -35,7 +35,7 @@ def update(path, dryRun=False):
     specs = dict()
     anchors = defaultdict(list)
     headings = defaultdict(dict)
-    for rawSpec in rawSpecData.values():
+    for rawSpec in list(rawSpecData.values()):
         spec = genSpec(rawSpec)
         specs[spec['vshortname']] = spec
         specHeadings = headings[spec['vshortname']]
@@ -71,16 +71,16 @@ def update(path, dryRun=False):
             p = os.path.join(path, "specs.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as f:
-                f.write(unicode(json.dumps(specs, ensure_ascii=False, indent=2, sort_keys=True)))
+                f.write(str(json.dumps(specs, ensure_ascii=False, indent=2, sort_keys=True)))
         except Exception as e:
             die("Couldn't save spec database to disk.\n{0}", e)
             return
         try:
-            for spec, specHeadings in headings.items():
+            for spec, specHeadings in list(headings.items()):
                 p = os.path.join(path, "headings", "headings-{0}.json".format(spec))
                 writtenPaths.add(p)
                 with io.open(p, 'w', encoding="utf-8") as f:
-                    f.write(unicode(json.dumps(specHeadings, ensure_ascii=False, indent=2, sort_keys=True)))
+                    f.write(str(json.dumps(specHeadings, ensure_ascii=False, indent=2, sort_keys=True)))
         except Exception as e:
             die("Couldn't save headings database to disk.\n{0}", e)
             return
@@ -93,7 +93,7 @@ def update(path, dryRun=False):
             p = os.path.join(path, "methods.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as f:
-                f.write(unicode(json.dumps(methods, ensure_ascii=False, indent=2, sort_keys=True)))
+                f.write(str(json.dumps(methods, ensure_ascii=False, indent=2, sort_keys=True)))
         except Exception as e:
             die("Couldn't save methods database to disk.\n{0}", e)
             return
@@ -101,7 +101,7 @@ def update(path, dryRun=False):
             p = os.path.join(path, "fors.json")
             writtenPaths.add(p)
             with io.open(p, 'w', encoding="utf-8") as f:
-                f.write(unicode(json.dumps(fors, ensure_ascii=False, indent=2, sort_keys=True)))
+                f.write(str(json.dumps(fors, ensure_ascii=False, indent=2, sort_keys=True)))
         except Exception as e:
             die("Couldn't save fors database to disk.\n{0}", e)
             return
@@ -183,12 +183,12 @@ def fixupAnchor(anchor):
     anchor['linking_text'] = linkingTexts
 
     # Normalize whitespace to a single space
-    for k,v in anchor.items():
-        if isinstance(v, basestring):
+    for k,v in list(anchor.items()):
+        if isinstance(v, str):
             anchor[k] = re.sub(r"\s+", " ", v.strip())
         elif isinstance(v, list):
             for k1, v1 in enumerate(v):
-                if isinstance(v1, basestring):
+                if isinstance(v1, str):
                     anchor[k][k1] = re.sub(r"\s+", " ", v1.strip())
     return anchor
 
@@ -240,8 +240,8 @@ def cleanSpecHeadings(headings):
     '''Headings data was purposely verbose, assuming collisions even when there wasn't one.
        Want to keep the collision data for multi-page, so I can tell when you request a non-existent page,
        but need to collapse away the collision stuff for single-page.'''
-    for specHeadings in headings.values():
-        for k, v in specHeadings.items():
+    for specHeadings in list(headings.values()):
+        for k, v in list(specHeadings.items()):
             if k[0] == "#" and len(v) == 1 and v[0][0:2] == "/#":
                 # No collision, and this is either a single-page spec or a non-colliding front-page link
                 # Go ahead and collapse them.
@@ -272,7 +272,7 @@ def extractMethodData(anchors):
     '''Compile a db of {argless methods => {argfull method => {args, fors, url, shortname}}'''
 
     methods = defaultdict(dict)
-    for key, anchors_ in anchors.items():
+    for key, anchors_ in list(anchors.items()):
         # Extract the name and arguments
         match = re.match(r"([^(]+)\((.*)\)", key)
         if not match:
@@ -287,8 +287,8 @@ def extractMethodData(anchors):
                 methods[arglessMethod][key] = {"args":args, "for": set(), "shortname":anchor['shortname']}
             methods[arglessMethod][key]["for"].update(anchor["for"])
     # Translate the "for" set back to a list for JSONing
-    for signatures in methods.values():
-        for signature in signatures.values():
+    for signatures in list(methods.values()):
+        for signature in list(signatures.values()):
             signature["for"] = sorted(signature["for"])
     return methods
 
@@ -297,7 +297,7 @@ def extractForsData(anchors):
     '''Compile a db of {for value => dict terms that use that for value}'''
 
     fors = defaultdict(set)
-    for key, anchors_ in anchors.items():
+    for key, anchors_ in list(anchors.items()):
         for anchor in anchors_:
             for for_ in anchor["for"]:
                 if for_ == "":
@@ -305,7 +305,7 @@ def extractForsData(anchors):
                 fors[for_].add(key)
             if not anchor["for"]:
                 fors["/"].add(key)
-    for key, val in fors.items():
+    for key, val in list(fors.items()):
         fors[key] = sorted(val)
     return fors
 
@@ -328,18 +328,18 @@ def writeAnchorsFile(anchors, path):
     '''
     writtenPaths = set()
     groupedEntries = defaultdict(dict)
-    for key,entries in anchors.items():
+    for key,entries in list(anchors.items()):
         group = config.groupFromKey(key)
         groupedEntries[group][key] = entries
-    for group, anchors in groupedEntries.items():
+    for group, anchors in list(groupedEntries.items()):
         p = os.path.join(path, "anchors", "anchors-{0}.data".format(group))
         writtenPaths.add(p)
         with io.open(p, 'w', encoding="utf-8") as fh:
-            for key, entries in sorted(anchors.items(), key=lambda x:x[0]):
+            for key, entries in sorted(list(anchors.items()), key=lambda x:x[0]):
                 for e in entries:
                     fh.write(key + "\n")
                     for field in ["type", "spec", "shortname", "level", "status", "url"]:
-                        fh.write(unicode(e.get(field, "")) + "\n")
+                        fh.write(str(e.get(field, "")) + "\n")
                     for field in ["export", "normative"]:
                         if e.get(field, False):
                             fh.write("1\n")

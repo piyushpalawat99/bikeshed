@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import io
 
@@ -122,7 +122,7 @@ def normalizePathSegment(pathSeg):
 
 def checkForOmittedTests(pathPrefix, testData, seenTestNames):
 	unseenTests = []
-	for testPath in testData.keys():
+	for testPath in list(testData.keys()):
 		if prefixInPath(pathPrefix, testPath):
 			if testPath not in seenTestNames:
 				unseenTests.append(testPath)

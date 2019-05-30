@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import re
 from collections import OrderedDict, defaultdict
 
@@ -9,6 +9,7 @@ from . import config
 from . import Line
 from .htmlhelpers import *
 from .messages import *
+from functools import reduce
 
 # This function does a single pass through the doc,
 # finding all the "data blocks" and processing them.
@@ -28,7 +29,7 @@ from .messages import *
 
 def transformDataBlocks(doc, lines):
     fromStrings = False
-    if any(isinstance(l, unicode) for l in lines):
+    if any(isinstance(l, str) for l in lines):
         fromStrings = True
         lines = [Line.Line(-1, l) for l in lines]
     inBlock = False
@@ -61,7 +62,7 @@ def transformDataBlocks(doc, lines):
             tagName = match.group(1)
             blockClasses = classesFromLine(line)
             seenClasses = []
-            for t in blockTypes.keys():
+            for t in list(blockTypes.keys()):
                 if t in blockClasses:
                     seenClasses.append(t)
             if not seenClasses:
@@ -137,7 +138,7 @@ def cleanPrefix(lines, tabSize):
     # Returns a fresh array, does not mutate the passed lines.
     if not lines:
         return []
-    prefix = reduce(commonPrefix, map(getWsPrefix, lines))
+    prefix = reduce(commonPrefix, list(map(getWsPrefix, lines)))
     prefixLen = len(prefix)
     return [line[prefixLen:] for line in lines]
 
@@ -252,7 +253,7 @@ def transformPropdef(lines, doc, firstLine, lineNum=None, **kwargs):
         attrs.pop("Animation type")
 
     attrsToPrint = []
-    for key, val in attrs.items():
+    for key, val in list(attrs.items()):
         if key in parsedAttrs:
             # Key was provided
             val = parsedAttrs[key]
@@ -264,7 +265,7 @@ def transformPropdef(lines, doc, firstLine, lineNum=None, **kwargs):
             # Optional key, just use default
             pass
         attrsToPrint.append((key,val))
-    for key,val in parsedAttrs.items():
+    for key,val in list(parsedAttrs.items()):
         # Find any "custom" provided keys
         if key not in attrs:
             attrsToPrint.append((key,val))
@@ -324,7 +325,7 @@ def transformDescdef(lines, doc, firstLine, lineNum=None, **kwargs):
         else:
             die("The descdef for '{0}' is missing a '{1}' line.", vals.get("Name", "???"), key, lineNum=lineNum)
             continue
-    for key in vals.viewkeys() - requiredKeys:
+    for key in vals.keys() - requiredKeys:
         ret.append("<tr><th>{0}:<td>{1}".format(key, vals[key]))
     ret.append("</table>")
 
@@ -366,7 +367,7 @@ def transformElementdef(lines, doc, firstLine, lineNum=None, **kwargs):
     attrs["Attributes"] = None
     attrs["Dom interfaces"] = None
     ret = ["<table class='def elementdef'{lineNumAttr}>".format(lineNumAttr=lineNumAttr)]
-    for key, val in attrs.items():
+    for key, val in list(attrs.items()):
         if key in parsedAttrs or val is not None:
             if key in parsedAttrs:
                 val = parsedAttrs[key]
@@ -387,7 +388,7 @@ def transformElementdef(lines, doc, firstLine, lineNum=None, **kwargs):
         else:
             die("The elementdef for '{0}' is missing a '{1}' line.", parsedAttrs.get("Name", "???"), key, lineNum=lineNum)
             continue
-    for key, val in parsedAttrs.items():
+    for key, val in list(parsedAttrs.items()):
         if key in attrs:
             continue
         ret.append("<tr><th>{0}:<td>{1}".format(key, val))
@@ -418,7 +419,7 @@ def transformArgumentdef(lines, firstLine, lineNum=None, **kwargs):
         die("Argumentdef blocks need a for='' attribute specifying their method.", lineNum=lineNum)
         return []
     addClass(el, "data")
-    rootAttrs = " ".join("{0}='{1}'".format(k,escapeAttr(v)) for k,v in el.attrib.items())
+    rootAttrs = " ".join("{0}='{1}'".format(k,escapeAttr(v)) for k,v in list(el.attrib.items()))
     text = ('''
 <table {attrs}{lineNumAttr}>
     <caption>Arguments for the <a method lt='{method}' for='{interface}'{lineNumAttr}>{interface}.{method}</a> method.</caption>
@@ -437,7 +438,7 @@ def transformArgumentdef(lines, firstLine, lineNum=None, **kwargs):
             <td>
             <td>
             <td>{1}'''.format(param, desc, lineNumAttr=lineNumAttr)
-    for param,desc in attrs.items()])
+    for param,desc in list(attrs.items())])
 + '''
 </table>''')
 
@@ -473,14 +474,14 @@ def parseDefBlock(lines, type, capitalizeKeys=True, lineNum=None):
 
 
 def transformRailroad(lines, doc, firstLine, **kwargs):
-    import StringIO
-    import railroadparser
+    import io
+    from . import railroadparser
     ret = ["<div class='railroad'>"]
     doc.extraStyles['style-railroad'] = "svg.railroad-diagram{background-color:hsl(30,20%,95%);}svg.railroad-diagram path{stroke-width:3px;stroke:black;fill:rgba(0,0,0,0);}svg.railroad-diagram text{font:bold 14px monospace;text-anchor:middle;}svg.railroad-diagram text.label{text-anchor:start;}svg.railroad-diagram text.comment{font:italic 12px monospace;}svg.railroad-diagram rect{stroke-width:3px;stroke:black;fill:hsl(120,100%,90%);}"
     code = ''.join(lines)
     diagram = railroadparser.parse(code)
     if diagram:
-        temp = StringIO.StringIO()
+        temp = io.StringIO()
         diagram.writeSvg(temp.write)
         ret.append(temp.getvalue())
         temp.close()
@@ -497,7 +498,7 @@ def transformRailroad(lines, doc, firstLine, **kwargs):
 def transformBiblio(lines, doc, **kwargs):
     storage = defaultdict(list)
     biblio.processSpecrefBiblioFile(''.join(lines), storage, order=1)
-    for k,vs in storage.items():
+    for k,vs in list(storage.items()):
         doc.refs.biblioKeys.add(k)
         doc.refs.biblios[k].extend(vs)
     return []
@@ -654,7 +655,7 @@ def processInfo(infos, doc, lineNum=None):
             die("Unknown info-block type '{0}'", infoType, lineNum=lineNum)
             continue
         infoCollections[infoType].append(info)
-    for infoType, infos in infoCollections.items():
+    for infoType, infos in list(infoCollections.items()):
         knownInfoTypes[infoType](infos, doc, lineNum=0)
 
 
@@ -672,7 +673,7 @@ def transformInclude(lines, doc, firstLine, lineNum=None, **kwargs):
             else:
                 die("Include blocks must only contain a single 'path'.", lineNum=lineNum)
         if "macros" in info:
-            for k,v in info.items():
+            for k,v in list(info.items()):
                 if k == "macros":
                     continue
                 if k not in macros and len(v) == 1:
@@ -772,7 +773,7 @@ def parseInfoTree(lines, indent=4, lineNum=0):
             return
         newData = defaultdict(list)
         for infos in infoLevels:
-            for k,v in infos.items():
+            for k,v in list(infos.items()):
                 newData[k].extend(v)
         datas.append(newData)
 

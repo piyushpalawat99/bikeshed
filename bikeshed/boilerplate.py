@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import copy
 import os
 import re
@@ -166,7 +166,7 @@ def addCustomBoilerplate(doc):
 
 
 def removeUnwantedBoilerplate(doc):
-    for tag,els in doc.fillContainers.items():
+    for tag,els in list(doc.fillContainers.items()):
         if tag not in doc.md.boilerplate:
             for el in els:
                 removeNode(el)
@@ -180,7 +180,7 @@ def addAnnotations(doc):
 
 
 def addBikeshedBoilerplate(doc):
-    for k,v in doc.extraStyles.items():
+    for k,v in list(doc.extraStyles.items()):
         if k not in doc.md.boilerplate:
             continue
         container = getFillContainer(k, doc)
@@ -189,7 +189,7 @@ def addBikeshedBoilerplate(doc):
         if container is not None:
             appendChild(container,
                         E.style("/* {0} */\n".format(k) + v))
-    for k,v in doc.extraScripts.items():
+    for k,v in list(doc.extraScripts.items()):
         if k not in doc.md.boilerplate:
             continue
         container = getFillContainer(k, doc)
@@ -201,7 +201,7 @@ def addBikeshedBoilerplate(doc):
 
 
 def addIndexSection(doc):
-    if len(findAll(config.dfnElementsSelector, doc)) == 0 and len(doc.externalRefsUsed.keys()) == 0:
+    if len(findAll(config.dfnElementsSelector, doc)) == 0 and len(list(doc.externalRefsUsed.keys())) == 0:
         return
     container = getFillContainer('index', doc=doc, default=True)
     if container is None:
@@ -212,7 +212,7 @@ def addIndexSection(doc):
     if len(findAll(config.dfnElementsSelector, doc)):
         addIndexOfLocallyDefinedTerms(doc, container)
 
-    if len(doc.externalRefsUsed.keys()):
+    if len(list(doc.externalRefsUsed.keys())):
         addIndexOfExternallyDefinedTerms(doc, container)
 
 
@@ -359,19 +359,19 @@ def addExplicitIndexes(doc):
         # Group entries by text/type/for,
         # then filter each group for obsolete/oldversions.
         refsFromTtf = defaultdict(list)
-        for text,entries in refsFromText.items():
+        for text,entries in list(refsFromText.items()):
             for ref in entries:
                 ttf = (text, ref.type, "".join(ref.for_) if ref.for_ else None)
                 refsFromTtf[ttf].append(ref)
         filteredRefs = defaultdict(list)
-        for ttf, refs in refsFromTtf.items():
+        for ttf, refs in list(refsFromTtf.items()):
             refs = doc.refs.filterObsoletes(refs)
             refs = refUtils.filterOldVersions(refs)
             if refs:
                 filteredRefs[ttf[0]].extend({"url":ref.url, "disambiguator":disambiguator(ref)} for ref in refs)
 
         # Sort the entries before generating
-        indexEntries = OrderedDict(sorted(filteredRefs.items(), key=lambda x:x[0].lower()))
+        indexEntries = OrderedDict(sorted(list(filteredRefs.items()), key=lambda x:x[0].lower()))
 
         appendChild(el, htmlFromIndexTerms(indexEntries))
         el.tag = "div"
@@ -382,10 +382,10 @@ def htmlFromIndexTerms(entries):
     # entries: dict (preferably OrderedDict, if you want stability) of linkText=>{url, label, disambiguator}
     # label is used for the actual link (normally heading level), disambiguator is phrase to use when there are collisions
 
-    entries = OrderedDict(sorted(entries.items(), key=lambda x:re.sub(r'[^a-z0-9]', '', x[0].lower())))
+    entries = OrderedDict(sorted(list(entries.items()), key=lambda x:re.sub(r'[^a-z0-9]', '', x[0].lower())))
 
     topList = E.ul({"class":"index"})
-    for text, items in entries.items():
+    for text, items in list(entries.items()):
         if len(items) == 1:
             item = items[0]
             li = appendChild(topList,
@@ -420,7 +420,7 @@ def addIndexOfExternallyDefinedTerms(doc, container):
         if href.startswith("#"):
             continue
         elsFromHref[href].append(a)
-    for spec, refGroups in sorted(doc.externalRefsUsed.items(), key=lambda x:x[0].upper()):
+    for spec, refGroups in sorted(list(doc.externalRefsUsed.items()), key=lambda x:x[0].upper()):
         # ref.spec is always lowercase; if the same string shows up in biblio data,
         # use its casing instead.
         biblioRef = doc.refs.getBiblioRef(spec, quiet=True)
@@ -433,12 +433,12 @@ def addIndexOfExternallyDefinedTerms(doc, container):
                              E.li(
                                  E.a(attrs, "[", printableSpec, "]"), " defines the following terms:"))
         termsUl = appendChild(specLi, E.ul())
-        for text,refs in sorted(refGroups.items(), key=lambda x:x[0]):
+        for text,refs in sorted(list(refGroups.items()), key=lambda x:x[0]):
             if len(refs) == 1:
-                ref = refs.values()[0]
+                ref = list(refs.values())[0]
                 link = makeLink(ref.text)
             else:
-                for key,ref in sorted(refs.items(), key=lambda x:x[0]):
+                for key,ref in sorted(list(refs.items()), key=lambda x:x[0]):
                     if key:
                         link = makeLink(ref.text, " ", E.small({}, "(for {0})".format(key)))
                     else:
@@ -506,7 +506,7 @@ def addPropertyIndex(doc):
             tempDesc = desc.copy()
             tempDesc['Name'] = name
             atRules[atRule].append(tempDesc)
-    for desc in atRules.values():
+    for desc in list(atRules.values()):
         desc.sort(key=lambda x:x["Name"])
 
     def createRow(prop, linkType):
@@ -574,7 +574,7 @@ def addPropertyIndex(doc):
 
 
 def addIDLSection(doc):
-    idlBlocks = filter(lambda x:isNormative(x, doc), findAll("pre.idl, xmp.idl", doc))
+    idlBlocks = [x for x in findAll("pre.idl, xmp.idl", doc) if isNormative(x, doc)]
     if len(idlBlocks) == 0:
         return
     html = getFillContainer('idl-index', doc=doc, default=True)
@@ -762,12 +762,12 @@ def addSpecMetadataSection(doc):
         md["Issue Tracking"] = [E.a({"href":href}, text) for text,href in doc.md.issues]
     if doc.md.editors:
         editorTerm = doc.md.editorTerm['singular']
-        md[editorTerm] = map(printEditor, doc.md.editors)
+        md[editorTerm] = list(map(printEditor, doc.md.editors))
     if doc.md.previousEditors:
         editorTerm = doc.md.editorTerm['singular']
-        md["Former " + editorTerm] = map(printEditor, doc.md.previousEditors)
+        md["Former " + editorTerm] = list(map(printEditor, doc.md.previousEditors))
     if doc.md.translations:
-        md["Translations"] = map(printTranslation, doc.md.translations)
+        md["Translations"] = list(map(printTranslation, doc.md.translations))
     if doc.md.audience:
         md["Audience"] = [", ".join(doc.md.audience)]
     if doc.md.toggleDiffs:
@@ -807,7 +807,7 @@ def addSpecMetadataSection(doc):
 
     # Merge "custom" metadata into non-custom, when they match up
     otherMd = OrderedDict()
-    for k, vs in doc.md.otherMetadata.items():
+    for k, vs in list(doc.md.otherMetadata.items()):
         if k in md:
             md[k].extend(parseHTML(doc.fixText(v)) for v in vs)
         else:
@@ -817,7 +817,7 @@ def addSpecMetadataSection(doc):
     for key in doc.md.metadataOrder:
         if key == "*":
             # Do all the non-explicit non-custom keys
-            for k,vs in md.items():
+            for k,vs in list(md.items()):
                 if k in doc.md.metadataOrder:
                     # Handled explicitly, don't put in the * spot
                     continue
@@ -827,7 +827,7 @@ def addSpecMetadataSection(doc):
                 appendChild(dl, *createMdEntry(k, vs))
         elif key == "!*":
             # Do all the non-explicit custom keys
-            for k,vs in otherMd.items():
+            for k,vs in list(otherMd.items()):
                 if k in doc.md.metadataOrder:
                     continue
                 if k not in doc.md.metadataInclude:
@@ -863,7 +863,7 @@ def addReferencesSection(doc):
     appendChild(container,
                 E.h2({"class":"no-num no-ref", "id":safeID(doc, "references")}, "References"))
 
-    normRefs = sorted(doc.normativeRefs.values(), key=lambda r: r.linkText.lower())
+    normRefs = sorted(list(doc.normativeRefs.values()), key=lambda r: r.linkText.lower())
     if len(normRefs):
         dl = appendChild(container,
                          E.h3({"class":"no-num no-ref", "id":safeID(doc, "normative")}, "Normative References"),
@@ -873,7 +873,7 @@ def addReferencesSection(doc):
             appendChild(dl, E.dt({"id":safeID(doc, id), "data-no-self-link":""}, "[" + formatBiblioTerm(ref.linkText) + "]"))
             appendChild(dl, E.dd(*ref.toHTML()))
 
-    informRefs = [x for x in sorted(doc.informativeRefs.values(), key=lambda r: r.linkText.lower()) if x.linkText not in doc.normativeRefs]
+    informRefs = [x for x in sorted(list(doc.informativeRefs.values()), key=lambda r: r.linkText.lower()) if x.linkText not in doc.normativeRefs]
     if len(informRefs):
         dl = appendChild(container,
                          E.h3({"class":"no-num no-ref", "id":safeID(doc, "informative")}, "Informative References"),

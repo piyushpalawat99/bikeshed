@@ -1,6 +1,6 @@
 """Tests for scandir.scandir()."""
 
-from __future__ import unicode_literals
+
 
 import os
 import shutil
@@ -23,8 +23,8 @@ IS_PY3 = sys.version_info >= (3, 0)
 if IS_PY3:
     int_types = int
 else:
-    int_types = (int, long)
-    str = unicode
+    int_types = (int, int)
+    str = str
 
 
 if hasattr(os, 'symlink'):
@@ -51,7 +51,7 @@ def setup_main():
     try:
         os.mkdir(TEST_PATH)
     except Exception as e:
-        print(repr(e), e.filename)
+        print((repr(e), e.filename))
         import time
         time.sleep(500)
         raise
@@ -252,7 +252,7 @@ class TestMixin(object):
 
     def test_walk_unicode_handling(self):
         encoding = sys.getfilesystemencoding()
-        dirname_unicode = u'test_unicode_dir'
+        dirname_unicode = 'test_unicode_dir'
         dirname_bytes = dirname_unicode.encode(encoding)
         dirpath = os.path.join(TEST_PATH.encode(encoding), dirname_bytes)
         try:
@@ -265,7 +265,7 @@ class TestMixin(object):
                     self.assertTrue(isinstance(path, bytes))
 
             # test unicode
-            text_type = str if IS_PY3 else unicode
+            text_type = str if IS_PY3 else str
             dirpath_unicode = text_type(dirpath, encoding)
             self.assertTrue(isinstance(dirpath_unicode, text_type))
             for (path, dirs, files) in scandir.walk(dirpath_unicode):

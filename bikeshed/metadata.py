@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import collections
 import copy
@@ -123,7 +123,7 @@ class MetadataManager:
 
     def addData(self, key, val, lineNum=None):
         key = key.strip()
-        if isinstance(val, basestring):
+        if isinstance(val, str):
             if key in ["Abstract"]:
                 val = val.strip("\n")
             else:
@@ -213,13 +213,13 @@ class MetadataManager:
 
         errors = []
         warnings = []
-        for attr, name in requiredSingularKeys.items():
+        for attr, name in list(requiredSingularKeys.items()):
             if getattr(self, attr) is None:
                 errors.append("    Missing a '{0}' entry.".format(name))
-        for attr, name in recommendedSingularKeys.items():
+        for attr, name in list(recommendedSingularKeys.items()):
             if getattr(self, attr) is None:
                 warnings.append("    You probably want to provide a '{0}' entry.".format(name))
-        for attr, name in requiredMultiKeys.items():
+        for attr, name in list(requiredMultiKeys.items()):
             if len(getattr(self, attr)) == 0:
                 errors.append("    Must provide at least one '{0}' entry.".format(name))
         if warnings:
@@ -265,16 +265,16 @@ class MetadataManager:
         elif self.noAbstract:
             macros["abstract"] = ""
             macros["abstractattr"] = ""
-        macros["year"] = unicode(self.date.year)
-        macros["date"] = unicode(self.date.strftime("{0} %B %Y".format(self.date.day)), encoding="utf-8")
-        macros["date-dmmy"] = unicode(self.date.strftime("{0} %B %Y".format(self.date.day)), encoding="utf-8") #same as plain 'date'
-        macros["cdate"] = unicode(self.date.strftime("%Y%m%d"), encoding="utf-8")
-        macros["isodate"] = unicode(self.date.strftime("%Y-%m-%d"), encoding="utf-8")
-        macros["date-my"] = unicode(self.date.strftime("%b %Y"), encoding="utf-8")
-        macros["date-mmy"] = unicode(self.date.strftime("%B %Y"), encoding="utf-8")
+        macros["year"] = str(self.date.year)
+        macros["date"] = str(self.date.strftime("{0} %B %Y".format(self.date.day)), encoding="utf-8")
+        macros["date-dmmy"] = str(self.date.strftime("{0} %B %Y".format(self.date.day)), encoding="utf-8") #same as plain 'date'
+        macros["cdate"] = str(self.date.strftime("%Y%m%d"), encoding="utf-8")
+        macros["isodate"] = str(self.date.strftime("%Y-%m-%d"), encoding="utf-8")
+        macros["date-my"] = str(self.date.strftime("%b %Y"), encoding="utf-8")
+        macros["date-mmy"] = str(self.date.strftime("%B %Y"), encoding="utf-8")
         if self.deadline:
-            macros["deadline"] = unicode(self.deadline.strftime("{0} %B %Y".format(self.deadline.day)), encoding="utf-8")
-            macros["isodeadline"] = unicode(self.deadline.strftime("%Y-%m-%d"), encoding="utf-8")
+            macros["deadline"] = str(self.deadline.strftime("{0} %B %Y".format(self.deadline.day)), encoding="utf-8")
+            macros["isodeadline"] = str(self.deadline.strftime("%Y-%m-%d"), encoding="utf-8")
         if self.status in config.snapshotStatuses:
             macros["version"] = "https://www.w3.org/TR/{year}/{status}-{vshortname}-{cdate}/".format(**macros)
         elif self.ED:
@@ -682,7 +682,7 @@ def parseAudience(key, val, lineNum):
         return ["all"]
     elif len(values) >= 1:
         ret = []
-        namedAudiences = set(["CWG", "LWG", "EWG", "LEWG", "DIRECTION"])
+        namedAudiences = {"CWG", "LWG", "EWG", "LEWG", "DIRECTION"}
         pseudonymAudiences = {"Concurrency":"SG1", "TM":"SG5", "Numerics":"SG6", "Reflection":"SG7", "UB":"SG12", "HMI":"SG13", "Tooling":"SG15", "Unicode":"SG16", "EWGI":"SG17", "LEWG":"SG18"}
         for v in values:
             if v in namedAudiences:
@@ -813,8 +813,8 @@ def fromJson(data, source=""):
             else:
                 die("Error loading {1} JSON:\n{0}", str(e), source)
         return md
-    for key,val in defaults.items():
-        if isinstance(val, basestring):
+    for key,val in list(defaults.items()):
+        if isinstance(val, str):
             md.addData(key, val)
         elif isinstance(val, list):
             for indivVal in val:
@@ -883,7 +883,7 @@ def join(*sources):
         for k in mdsource.manuallySetKeys:
             mdentry = knownKeys[k]
             md.addParsedData(k, getattr(mdsource, mdentry.attrName))
-        for k,v in mdsource.otherMetadata.items():
+        for k,v in list(mdsource.otherMetadata.items()):
             md.otherMetadata[k].extend(v)
     return md
 

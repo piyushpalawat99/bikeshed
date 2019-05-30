@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import re
 from functools import total_ordering
@@ -13,7 +13,7 @@ class HierarchicalNumber(object):
             self.nums = [int(x) for x in re.split(r"\D+", valString) if x != ""]
         self.originalVal = valString
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.nums)
 
     def __lt__(self, other):

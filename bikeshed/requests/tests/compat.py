@@ -3,12 +3,12 @@ from requests.compat import is_py3
 
 
 try:
-    import StringIO
+    import io
 except ImportError:
     import io as StringIO
 
 try:
-    from cStringIO import StringIO as cStringIO
+    from io import StringIO as cStringIO
 except ImportError:
     cStringIO = None
 

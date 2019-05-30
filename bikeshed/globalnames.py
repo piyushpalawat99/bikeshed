@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import collections as col
 import copy
 import re
@@ -82,7 +82,7 @@ class GlobalName(object):
         return '/'.join(strPieces)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return str(self).encode('utf-8')
 
     def canonicalize(self, type=None, childType=None):
         '''
@@ -188,7 +188,7 @@ class GlobalNames(col.Set, col.Hashable):
         text = text
         type = type
         childType = childType
-        if isinstance(text, basestring):
+        if isinstance(text, str):
             text = GlobalNames.__splitNames(text)
         if isinstance(text, col.Sequence):
             for t in text:
@@ -228,7 +228,7 @@ class GlobalNames(col.Set, col.Hashable):
 
     def specialize(self, texts, type=None):
         type = type
-        if isinstance(texts, basestring):
+        if isinstance(texts, str):
             texts = [texts]
         for text in texts:
             for name in self.__names:
@@ -274,7 +274,7 @@ class GlobalNames(col.Set, col.Hashable):
     __hash__ = col.Set._hash
 
     def __unicode__(self):
-        return ' '.join(map(unicode,self))
+        return ' '.join(map(str,self))
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return str(self).encode('utf-8')

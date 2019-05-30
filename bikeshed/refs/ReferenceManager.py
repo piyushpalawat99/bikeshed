@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import io
 import json
@@ -123,7 +123,7 @@ class ReferenceManager(object):
         except IOError:
             # Missing file is fine
             pass
-        for k,vs in storage.items():
+        for k,vs in list(storage.items()):
             self.biblioKeys.add(k)
             self.biblios[k].extend(vs)
 
@@ -156,7 +156,7 @@ class ReferenceManager(object):
         self.specLevel = md.level
         self.spec = md.vshortname
 
-        for term, defaults in md.linkDefaults.items():
+        for term, defaults in list(md.linkDefaults.items()):
             for default in defaults:
                 self.defaultSpecs[term].append(default)
 
@@ -168,7 +168,7 @@ class ReferenceManager(object):
         # Kill all the non-local anchors with the same shortname as the current spec,
         # so you don't end up accidentally linking to something that's been removed from the local copy.
         # TODO: This is dumb.
-        for term, refs in self.foreignRefs._refs.items():
+        for term, refs in list(self.foreignRefs._refs.items()):
             for ref in refs:
                 if ref['status'] != "local" and ref['shortname'].rstrip() == self.shortname:
                     ref['export'] = False
@@ -354,10 +354,10 @@ class ReferenceManager(object):
                 # and, if interface is specified, are for that interface.
                 # Dedup/collect by url, so I'll get all the signatures for a given dfn.
                 possibleMethods = defaultdict(list)
-                for argfullName, metadata in methodSignatures.items():
+                for argfullName, metadata in list(methodSignatures.items()):
                     if text in metadata["args"] and (interfaceName in metadata["for"] or interfaceName is None) and metadata["shortname"] != self.shortname:
                         possibleMethods[metadata["shortname"]].append(argfullName)
-                possibleMethods = possibleMethods.values()
+                possibleMethods = list(possibleMethods.values())
                 if not possibleMethods:
                     # No method signatures with this argument/interface.
                     # Jump out and fail in a normal way.
@@ -384,13 +384,13 @@ class ReferenceManager(object):
             # Allow foo(bar) to be for'd to with just foo() if it's completely unambiguous.
             methodPrefix = methodName[:-1]
             candidates, _ = self.localRefs.queryRefs(linkType="functionish", linkFor=interfaceName)
-            methodRefs = {c.url: c for c in candidates if c.text.startswith(methodPrefix)}.values()
+            methodRefs = list({c.url: c for c in candidates if c.text.startswith(methodPrefix)}.values())
             if not methodRefs:
                 # Look for non-locals, then
                 c1,_ = self.anchorBlockRefs.queryRefs(linkType="functionish", spec=spec, status=status, statusHint=statusHint, linkFor=interfaceName, export=export, ignoreObsoletes=True)
                 c2,_ = self.foreignRefs.queryRefs(linkType="functionish", spec=spec, status=status, statusHint=statusHint, linkFor=interfaceName, export=export, ignoreObsoletes=True)
                 candidates = c1 + c2
-                methodRefs = {c.url: c for c in candidates if c.text.startswith(methodPrefix)}.values()
+                methodRefs = list({c.url: c for c in candidates if c.text.startswith(methodPrefix)}.values())
             if zeroRefsError and len(methodRefs) > 1:
                 # More than one possible foo() overload, can't tell which to link to
                 linkerror("Too many possible method targets to disambiguate '{0}/{1}'. Please specify the names of the required args, like 'foo(bar, baz)', in the 'for' attribute.", linkFor, text, el=el)
@@ -531,7 +531,7 @@ def simplifyPossibleRefs(refs, alwaysShowFor=False):
         else:
             forVals[(ref.text, ref.type, ref.spec)].append(("/", ref.url))
     retRefs = []
-    for (text, type, spec), fors in forVals.items():
+    for (text, type, spec), fors in list(forVals.items()):
         if len(fors) >= 2 or alwaysShowFor:
             # Needs for-based disambiguation
             for for_,url in fors:
@@ -556,7 +556,7 @@ def reportMultiplePossibleRefs(possibleRefs, linkText, linkType, linkFor, defaul
         allRefs[refToText(ref)].append(ref)
     uniqueRefs = []
     mergedRefs = []
-    for refs in allRefs.values():
+    for refs in list(allRefs.values()):
         if len(refs) == 1:
             uniqueRefs.append(refs[0])
         else:

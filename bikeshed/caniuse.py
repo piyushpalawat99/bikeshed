@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 import json
 from collections import OrderedDict
 from datetime import datetime
@@ -105,10 +105,10 @@ def addCanIUsePanels(doc):
 
 def canIUsePanelFor(id, data, update, classFromBrowser):
     panel = E.aside({"class": "caniuse-status", "data-deco": ""},
-        E.input({"value": u"\u22F0", "type": "button", "class":"caniuse-panel-btn"}))
+        E.input({"value": "\u22F0", "type": "button", "class":"caniuse-panel-btn"}))
     mainPara = E.p({"class": "support"}, E.b({}, "Support:"))
     appendChild(panel, mainPara)
-    for browser,support in data['support'].items():
+    for browser,support in list(data['support'].items()):
         statusCode = support[0]
         if statusCode == "u":
             continue
@@ -155,7 +155,7 @@ def validateCanIUseURLs(doc, elements):
     urlFeatures = set()
     for url in doc.md.canIUseURLs:
         sawTheURL = False
-        for featureID, featureUrl in doc.canIUse.urlFromFeature.items():
+        for featureID, featureUrl in list(doc.canIUse.urlFromFeature.items()):
             if featureUrl.startswith(url):
                 sawTheURL = True
                 urlFeatures.add(featureID)

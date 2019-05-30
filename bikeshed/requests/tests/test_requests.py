@@ -3,7 +3,7 @@
 
 """Tests for Requests."""
 
-from __future__ import division
+
 import json
 import os
 import pickle
@@ -126,7 +126,7 @@ class TestRequests:
 
     def test_binary_put(self):
         request = requests.Request('PUT', 'http://example.com',
-                                   data=u"ööö".encode("utf-8")).prepare()
+                                   data="ööö".encode("utf-8")).prepare()
         assert isinstance(request.body, bytes)
 
     @pytest.mark.parametrize('scheme', ('http://', 'HTTP://', 'hTTp://', 'HttP://'))
@@ -187,7 +187,7 @@ class TestRequests:
 
     def test_http_301_doesnt_change_head_to_get(self, httpbin):
         r = requests.head(httpbin('status', '301'), allow_redirects=True)
-        print(r.content)
+        print((r.content))
         assert r.status_code == 200
         assert r.request.method == 'HEAD'
         assert r.history[0].status_code == 301
@@ -834,8 +834,8 @@ class TestRequests:
         jar.set(key1, value1)
 
         d1 = dict(jar)
-        d2 = dict(jar.iteritems())
-        d3 = dict(jar.items())
+        d2 = dict(iter(jar.items()))
+        d3 = dict(list(jar.items()))
 
         assert len(jar) == 2
         assert len(d1) == 2
@@ -854,8 +854,8 @@ class TestRequests:
         jar.set(key1, value1)
 
         d1 = dict(jar)
-        d2 = dict(jar.iteritems())
-        d3 = dict(jar.items())
+        d2 = dict(iter(jar.items()))
+        d3 = dict(list(jar.items()))
 
         assert d1['some_cookie'] == 'some_value'
         assert d2['some_cookie'] == 'some_value'
@@ -872,7 +872,7 @@ class TestRequests:
         jar.set(key, value)
         jar.set(key1, value1)
 
-        keys = jar.keys()
+        keys = list(jar.keys())
         assert keys == list(keys)
         # make sure one can use keys multiple times
         assert list(keys) == list(keys)
@@ -888,7 +888,7 @@ class TestRequests:
         jar.set(key, value)
         jar.set(key1, value1)
 
-        values = jar.values()
+        values = list(jar.values())
         assert values == list(values)
         # make sure one can use values multiple times
         assert list(values) == list(values)
@@ -904,7 +904,7 @@ class TestRequests:
         jar.set(key, value)
         jar.set(key1, value1)
 
-        items = jar.items()
+        items = list(jar.items())
         assert items == list(items)
         # make sure one can use items multiple times
         assert list(items) == list(items)
@@ -919,7 +919,7 @@ class TestRequests:
         jar.set(key, value, domain=domain1)
         jar.set(key, value, domain=domain2)
         assert key in jar
-        items = jar.items()
+        items = list(jar.items())
         assert len(items) == 2
 
         # Verify that CookieConflictError is raised if domain is not specified
@@ -1104,8 +1104,8 @@ class TestRequests:
 
         # This is testing that they are builtin strings. A bit weird, but there
         # we go.
-        assert 'unicode' in p.headers.keys()
-        assert 'byte' in p.headers.keys()
+        assert 'unicode' in list(p.headers.keys())
+        assert 'byte' in list(p.headers.keys())
 
     @pytest.mark.parametrize('files', ('foo', b'foo', bytearray(b'foo')))
     def test_can_send_objects_with_files(self, httpbin, files):
@@ -1390,8 +1390,8 @@ class TestCaseInsensitiveDict:
             'user-Agent': 'requests',
         })
         keyset = frozenset(['Accept', 'user-Agent'])
-        assert frozenset(i[0] for i in cid.items()) == keyset
-        assert frozenset(cid.keys()) == keyset
+        assert frozenset(i[0] for i in list(cid.items())) == keyset
+        assert frozenset(list(cid.keys())) == keyset
         assert frozenset(cid) == keyset
 
     def test_preserve_last_key_case(self):
@@ -1402,8 +1402,8 @@ class TestCaseInsensitiveDict:
         cid.update({'ACCEPT': 'application/json'})
         cid['USER-AGENT'] = 'requests'
         keyset = frozenset(['ACCEPT', 'USER-AGENT'])
-        assert frozenset(i[0] for i in cid.items()) == keyset
-        assert frozenset(cid.keys()) == keyset
+        assert frozenset(i[0] for i in list(cid.items())) == keyset
+        assert frozenset(list(cid.keys())) == keyset
         assert frozenset(cid) == keyset
 
     def test_copy(self):
@@ -1685,7 +1685,7 @@ def test_urllib3_pool_connection_closed(httpbin):
     try:
         s.get(httpbin('status/200'))
     except ConnectionError as e:
-        assert u"Pool is closed." in str(e)
+        assert "Pool is closed." in str(e)
 
 
 def test_vendor_aliases():

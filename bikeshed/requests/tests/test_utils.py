@@ -422,7 +422,7 @@ def test_prepend_scheme_if_needed(value, expected):
     'value, expected', (
         ('T', 'T'),
         (b'T', 'T'),
-        (u'T', 'T'),
+        ('T', 'T'),
     ))
 def test_to_native_string(value, expected):
     assert to_native_string(value) == expected

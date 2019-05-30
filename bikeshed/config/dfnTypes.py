@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division, unicode_literals
+
 
 import re
 from collections import defaultdict
@@ -47,7 +47,7 @@ dfnClassToType = {
     "http-headerdef"     : "http-header"}
 
 
-dfnTypes = frozenset(dfnClassToType.values() + ["dfn"])
+dfnTypes = frozenset(list(dfnClassToType.values()) + ["dfn"])
 maybeTypes = frozenset(["value", "type", "at-rule", "function", "selector"])
 cssTypes = frozenset(["property", "value", "at-rule", "descriptor", "type", "function", "selector"])
 markupTypes = frozenset(["element", "element-attr", "element-state", "attr-value"])
@@ -74,7 +74,7 @@ linkTypeToDfnType = {
     "codelike": frozenset(["element", "element-attr", "element-state", "attr-value"]) | idlTypes,
     "all": linkTypes
 }
-for dfnType in dfnClassToType.values():
+for dfnType in list(dfnClassToType.values()):
     linkTypeToDfnType[dfnType] = frozenset([dfnType])
 
 
@@ -89,11 +89,11 @@ def linkTypeIn(linkTypes, targetTypes="all"):
     #  and expand into one or more base types.)
     # Called with no arguments,
     # tests if the passed type is a valid dfn/link type.
-    if isinstance(linkTypes, basestring):
+    if isinstance(linkTypes, str):
         linkTypes = linkTypeToDfnType[linkTypes]
     else:
         linkTypes = set(linkTypes)
-    if isinstance(targetTypes, basestring):
+    if isinstance(targetTypes, str):
         targetTypes = linkTypeToDfnType[targetTypes]
     else:
         targetTypes = set(targetTypes)

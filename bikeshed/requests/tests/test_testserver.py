@@ -48,7 +48,7 @@ class TestTestServer:
             r = requests.get('http://{0}:{1}'.format(host, port))
 
             assert r.status_code == 200
-            assert r.text == u'roflol'
+            assert r.text == 'roflol'
             assert r.headers['Content-Length'] == '6' 
             
     def test_basic_response(self):
@@ -56,7 +56,7 @@ class TestTestServer:
         with Server.basic_response_server() as (host, port):
             r = requests.get('http://{0}:{1}'.format(host, port))
             assert r.status_code == 200
-            assert r.text == u''
+            assert r.text == ''
             assert r.headers['Content-Length'] == '0'
 
     def test_basic_waiting_server(self):
